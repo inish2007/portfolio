@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="45" fill="#050510" stroke="#00D4FF" stroke-width="2"/>
+  <circle cx="50" cy="50" r="30" fill="#5A189A" opacity="0.8"/>
+  <circle cx="50" cy="50" r="15" fill="#00D4FF" opacity="0.9"/>
+  <text x="50" y="57" text-anchor="middle" font-size="18" font-weight="bold" fill="white" font-family="monospace">IO</text>
+</svg>
