@@ -12,7 +12,6 @@ const NAV_ITEMS = [
   { id: 'contact',      label: 'Comm Hub',       icon: '◉' },
 ];
 
-/* ── Keyframe + hover styles injected once ───────────────────────────── */
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
@@ -27,7 +26,6 @@ const CSS = `
     50%       { box-shadow: 0 0 18px rgba(0,255,255,0.6), 0 0 8px rgba(139,92,246,0.4); }
   }
 
-  /* ── Nav button base + hover ── */
   .nhud-btn {
     display: flex;
     align-items: center;
@@ -81,7 +79,6 @@ const CSS = `
     box-shadow: 0 0 6px #22d3ee;
   }
 
-  /* ── Mobile nav item ── */
   .nhud-mobile-item {
     display: flex;
     align-items: center;
@@ -111,7 +108,6 @@ const CSS = `
     color: #22d3ee;
   }
 
-  /* ── Contact button ── */
   .nhud-contact {
     font-family: 'Orbitron', 'Share Tech Mono', monospace;
     font-size: 8px;
@@ -133,7 +129,6 @@ const CSS = `
     transform: translateY(-1px);
   }
 
-  /* ── Logo button ── */
   .nhud-logo {
     display: flex;
     align-items: center;
@@ -143,6 +138,47 @@ const CSS = `
     cursor: pointer;
     padding: 2px 0;
     flex-shrink: 0;
+  }
+
+  /* Responsive helpers */
+  .nhud-desktop-nav {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .nhud-desktop-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+  }
+
+  .nhud-status-cluster-full {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .nhud-status-cluster-full {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  .nhud-contact-desktop {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .nhud-contact-desktop {
+      display: block;
+    }
+  }
+
+  .nhud-logo-subtitle {
+    display: none;
+  }
+  @media (min-width: 400px) {
+    .nhud-logo-subtitle {
+      display: block;
+    }
   }
 `;
 
@@ -154,7 +190,6 @@ export default function NavHUD() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled,   setScrolled]   = useState(false);
 
-  /* live clock */
   useEffect(() => {
     const update = () => {
       const now = new Date();
@@ -170,24 +205,19 @@ export default function NavHUD() {
     return () => clearInterval(id);
   }, []);
 
-  /* scroll shadow boost */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  /* ── FIXED: dynamically calculate navbar height for scroll offset ── */
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) {
       const navHeight = navRef.current ? navRef.current.getBoundingClientRect().height : 80;
       const elementTop = el.getBoundingClientRect().top + window.scrollY;
-      const offsetPosition = elementTop - navHeight - 20; // 20px extra offset for breathing room
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
+      const offsetPosition = elementTop - navHeight - 20;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     }
     setActiveSection(id);
     setMobileOpen(false);
@@ -216,8 +246,8 @@ export default function NavHUD() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
-          padding: '10px 18px',
+          gap: '8px',
+          padding: '10px 14px',
           borderRadius: '18px',
           background: 'rgba(2, 8, 24, 0.55)',
           backdropFilter: 'blur(20px) saturate(180%)',
@@ -248,12 +278,12 @@ export default function NavHUD() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontFamily: 'Orbitron,monospace', color: '#22d3ee', fontSize: 13, letterSpacing: '0.22em', fontWeight: 700, textTransform: 'uppercase' }}>INISH OS</span>
-              <span style={{ fontFamily: 'Orbitron,monospace', color: '#a78bfa', fontSize: 7, letterSpacing: '0.32em', marginTop: 3, textTransform: 'uppercase' }}>NEBULA VESSEL</span>
+              <span className="nhud-logo-subtitle" style={{ fontFamily: 'Orbitron,monospace', color: '#a78bfa', fontSize: 7, letterSpacing: '0.32em', marginTop: 3, textTransform: 'uppercase' }}>NEBULA VESSEL</span>
             </div>
           </button>
 
-          {/* ── Desktop nav links ── */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* ── Desktop nav links — hidden below lg ── */}
+          <nav className="nhud-desktop-nav">
             {NAV_ITEMS.map(item => {
               const active = activeSection === item.id;
               return (
@@ -271,25 +301,29 @@ export default function NavHUD() {
           </nav>
 
           {/* ── Right status cluster ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
-            {/* SYS ONLINE pill */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 999, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)' }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite', boxShadow: '0 0 6px #4ade80' }} />
-              <span style={{ fontFamily: 'Orbitron,monospace', fontSize: 7.5, color: '#4ade80', letterSpacing: '0.2em', textTransform: 'uppercase' }}>SYS ONLINE</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+
+            {/* SYS ONLINE pill + Clock — hidden below sm */}
+            <div className="nhud-status-cluster-full">
+              {/* SYS ONLINE pill */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 999, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)' }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite', boxShadow: '0 0 6px #4ade80' }} />
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: 7.5, color: '#4ade80', letterSpacing: '0.2em', textTransform: 'uppercase' }}>SYS ONLINE</span>
+              </div>
+
+              {/* Clock */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: 6, color: 'rgba(148,163,184,0.5)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 1 }} ref={dateRef} />
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: 10, color: 'rgba(34,211,238,0.8)', letterSpacing: '0.15em', fontVariantNumeric: 'tabular-nums' }} ref={timeRef} />
+              </div>
             </div>
 
-            {/* Clock */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontFamily: 'Orbitron,monospace', fontSize: 6, color: 'rgba(148,163,184,0.5)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 1 }} ref={dateRef} />
-              <span style={{ fontFamily: 'Orbitron,monospace', fontSize: 10, color: 'rgba(34,211,238,0.8)', letterSpacing: '0.15em', fontVariantNumeric: 'tabular-nums' }} ref={timeRef} />
-            </div>
-
-            {/* Contact CTA */}
-            <button className="nhud-contact" onClick={() => scrollTo('contact')}>
+            {/* Contact CTA — hidden below sm */}
+            <button className="nhud-contact nhud-contact-desktop" onClick={() => scrollTo('contact')}>
               ◉ CONTACT
             </button>
 
-            {/* Mobile hamburger */}
+            {/* Hamburger — always visible */}
             <button
               style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'rgba(0,255,255,0.06)', border: '1px solid rgba(0,255,255,0.2)', borderRadius: 8, padding: 8, cursor: 'pointer', alignItems: 'center', justifyContent: 'center' }}
               onClick={() => setMobileOpen(v => !v)}
@@ -309,7 +343,7 @@ export default function NavHUD() {
           </div>
         </div>
 
-        {/* Mobile menu sits outside the pill to avoid overflow clipping */}
+        {/* Mobile menu */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
@@ -350,9 +384,20 @@ export default function NavHUD() {
                 );
               })}
 
+              {/* Contact + SYS status shown in mobile menu */}
+              <div style={{ marginTop: 8, padding: '8px 14px', borderTop: '1px solid rgba(0,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite', boxShadow: '0 0 6px #4ade80' }} />
+                  <span style={{ fontFamily: 'Orbitron,monospace', fontSize: 7, color: '#4ade80', letterSpacing: '0.2em', textTransform: 'uppercase' }}>SYS ONLINE</span>
+                </div>
+                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: 8, color: 'rgba(34,211,238,0.7)', letterSpacing: '0.1em' }} ref={null}>
+                  {new Date().toLocaleTimeString('en-US', { hour12: false })}
+                </span>
+              </div>
+
               <button
                 className="nhud-contact"
-                style={{ marginTop: 8, width: '100%', padding: 10, textAlign: 'center', borderRadius: 10 }}
+                style={{ marginTop: 4, width: '100%', padding: 10, textAlign: 'center', borderRadius: 10 }}
                 onClick={() => scrollTo('contact')}
               >
                 ◉ OPEN COMM HUB

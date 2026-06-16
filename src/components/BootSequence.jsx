@@ -15,7 +15,6 @@ const BOOT_LINES = [
   { text: 'CAPTAIN IDENTIFIED...', delay: 4550, color: '#00D4FF' },
 ];
 
-// Phases: each has a name and absolute start time (ms from mount)
 const PHASES = [
   { name: 'dark', start: 0 },
   { name: 'particle', start: 800 },
@@ -27,10 +26,10 @@ const PHASES = [
   { name: 'done', start: 99999 },
 ];
 
-const UI_APPEAR = 5000;  // when terminal/logo fades in
-const CAPTAIN_SHOW = 9700; // when captain card appears
-const FADE_OUT = 11200; // when screen starts fading
-const COMPLETE = 12200; // when setBooted fires
+const UI_APPEAR = 5000;
+const CAPTAIN_SHOW = 9700;
+const FADE_OUT = 11200;
+const COMPLETE = 12200;
 
 // ─── Canvas helpers ───────────────────────────────────────────────────────────
 
@@ -61,7 +60,7 @@ function createDust(cx, cy, fast = false) {
   };
 }
 
-// ─── Canvas Renderer (pure, no React state) ───────────────────────────────────
+// ─── Canvas Renderer ──────────────────────────────────────────────────────────
 
 function startRenderer(canvas, getElapsed) {
   const ctx = canvas.getContext('2d');
@@ -101,7 +100,6 @@ function startRenderer(canvas, getElapsed) {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
 
-    // ── PARTICLE PHASE ──
     if (name === 'particle') {
       const size = 2 + t * 4;
       const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 10);
@@ -114,7 +112,6 @@ function startRenderer(canvas, getElapsed) {
       ctx.fillStyle = '#ffffff'; ctx.fill();
     }
 
-    // ── PULSE PHASE ──
     if (name === 'pulse') {
       for (let ring = 0; ring < 4; ring++) {
         const rt = Math.max(0, (t - ring * 0.15) * 1.35);
@@ -133,7 +130,6 @@ function startRenderer(canvas, getElapsed) {
       ctx.fillStyle = g1; ctx.fill();
     }
 
-    // ── EXPLOSION PHASE ──
     if (name === 'explosion') {
       const RING_COLORS = ['#00D4FF', '#5A189A', '#FF4FD8', '#00D4FF', '#ffffff'];
       const maxR = Math.min(w, h) * 0.8;
@@ -152,14 +148,12 @@ function startRenderer(canvas, getElapsed) {
         ctx.lineWidth = (1 - rt) * 3.5 + 0.5;
         ctx.stroke();
       }
-      // spawn explosion dust burst
       if (now - lastDustSpawn > 30 && dust.length < 350) {
         spawnDust(cx, cy, 6, true);
         lastDustSpawn = now;
       }
     }
 
-    // ── GALAXY / STARS / BOOT phases ──
     if (name === 'galaxy' || name === 'stars' || name === 'boot' || name === 'done') {
       ensureStars(w, h);
       if (dust.length < 80 && now - lastDustSpawn > 80) {
@@ -168,7 +162,6 @@ function startRenderer(canvas, getElapsed) {
       }
     }
 
-    // ── Update & draw dust ──
     dust = dust.filter(d => d.alpha > 0.01);
     for (const d of dust) {
       d.x += d.vx; d.y += d.vy;
@@ -179,7 +172,6 @@ function startRenderer(canvas, getElapsed) {
       ctx.fill();
     }
 
-    // ── Draw stars ──
     for (const s of stars) {
       const twinkle = 0.5 + 0.5 * Math.sin((now / 1000) * s.twinkleSpeed + s.twinklePhase);
       const alpha = s.baseAlpha * twinkle;
@@ -193,7 +185,6 @@ function startRenderer(canvas, getElapsed) {
       }
     }
 
-    // ── Ambient nebula glow at center ──
     if (name !== 'dark') {
       const glowR = name === 'particle' ? 24 : name === 'pulse' ? 36 : 60;
       const glowA = (name === 'boot' || name === 'done') ? 0.25 : Math.min(t * 0.55, 0.55);
@@ -225,10 +216,21 @@ export default function BootSequence() {
   const [loadingPct, setLoadingPct] = useState(0);
   const [showCaptain, setShowCaptain] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
+  const [skipHovered, setSkipHovered] = useState(false);
 
   const push = useCallback((fn, delay) => {
     timers.current.push(setTimeout(fn, delay));
   }, []);
+
+  // ── Skip handler ──
+  const handleSkip = useCallback(() => {
+    // Kill every pending timer
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    // Instant fade-out then boot
+    setFadeOut(true);
+    setTimeout(() => setBooted(true), 400);
+  }, [setBooted]);
 
   // ── Canvas resize ──
   useEffect(() => {
@@ -247,10 +249,8 @@ export default function BootSequence() {
 
   // ── Timers ──
   useEffect(() => {
-    // UI layer appear
     push(() => setUiVisible(true), UI_APPEAR);
 
-    // Boot log lines
     BOOT_LINES.forEach((line, i) => {
       push(() => {
         setVisibleLines(prev => [...prev, line]);
@@ -258,7 +258,6 @@ export default function BootSequence() {
       }, UI_APPEAR + line.delay);
     });
 
-    // Captain card
     push(() => setShowCaptain(true), CAPTAIN_SHOW);
     push(() => setFadeOut(true), FADE_OUT);
     push(() => setBooted(true), COMPLETE);
@@ -271,7 +270,7 @@ export default function BootSequence() {
       className="boot-screen fixed inset-0 z-[9999] flex flex-col items-center justify-center"
       style={{
         background: '#000',
-        transition: fadeOut ? 'opacity 0.9s ease' : undefined,
+        transition: fadeOut ? 'opacity 0.4s ease' : undefined,
         opacity: fadeOut ? 0 : 1,
         pointerEvents: fadeOut ? 'none' : 'auto',
       }}
@@ -313,6 +312,36 @@ export default function BootSequence() {
         />
       ))}
 
+      {/* ── SKIP BUTTON ── */}
+      <button
+        onClick={handleSkip}
+        onMouseEnter={() => setSkipHovered(true)}
+        onMouseLeave={() => setSkipHovered(false)}
+        style={{
+          position: 'absolute',
+          bottom: 28,
+          right: 28,
+          zIndex: 20,
+          fontFamily: 'monospace',
+          fontSize: 9,
+          letterSpacing: '0.28em',
+          textTransform: 'uppercase',
+          color: skipHovered ? '#00D4FF' : 'rgba(0,212,255,0.45)',
+          background: skipHovered ? 'rgba(0,212,255,0.08)' : 'transparent',
+          border: `1px solid ${skipHovered ? 'rgba(0,212,255,0.5)' : 'rgba(0,212,255,0.2)'}`,
+          borderRadius: 6,
+          padding: '7px 14px',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 7,
+        }}
+      >
+        <span style={{ opacity: skipHovered ? 1 : 0.6 }}>▶▶</span>
+        SKIP BOOT
+      </button>
+
       {/* ── UI Layer ── */}
       <div
         style={{
@@ -324,30 +353,25 @@ export default function BootSequence() {
           transition: 'opacity 0.9s ease, transform 0.9s ease',
         }}
       >
-
         {/* ── Logo ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 28 }}>
           <div style={{ position: 'relative', width: 56, height: 56 }}>
-            {/* outer ring */}
             <div style={{
               position: 'absolute', inset: 0, borderRadius: '50%',
               border: '1.5px solid #00D4FF',
               animation: 'bs-spin 7s linear infinite',
             }} />
-            {/* middle ring */}
             <div style={{
               position: 'absolute', inset: 7, borderRadius: '50%',
               border: '1px solid #FF4FD8',
               animation: 'bs-spin 4.5s linear infinite reverse',
             }} />
-            {/* core glow */}
             <div style={{
               position: 'absolute', inset: 14, borderRadius: '50%',
               background: 'radial-gradient(circle at 38% 38%, #FF4FD8 0%, #5A189A 45%, #00D4FF 100%)',
               opacity: 0.88,
               animation: 'bs-pulse-orb 3s ease-in-out infinite',
             }} />
-            {/* label */}
             <div style={{
               position: 'absolute', inset: 0, display: 'flex',
               alignItems: 'center', justifyContent: 'center',
@@ -418,7 +442,6 @@ export default function BootSequence() {
               transition: 'width 0.4s ease',
               position: 'relative',
             }}>
-              {/* glowing tip */}
               <div style={{
                 position: 'absolute', right: 0, top: '50%',
                 transform: 'translate(50%, -50%)',
@@ -458,7 +481,6 @@ export default function BootSequence() {
             fontSize: 8, letterSpacing: '0.3em', opacity: 0.75,
           }}>SYSTEM ONLINE ◆ NEBULA INITIALIZING</p>
         </div>
-
       </div>
 
       {/* ── Keyframe styles ── */}
