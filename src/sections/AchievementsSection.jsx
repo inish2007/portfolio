@@ -29,7 +29,7 @@ function Badge({ achievement, index, inView }) {
 
   return (
     <motion.div
-      className="relative cursor-default overflow-hidden rounded-xl achievement-badge p-5 text-center"
+      className="relative cursor-default overflow-hidden rounded-xl achievement-badge p-4 text-center sm:p-5"
       style={{ opacity: achievement.unlocked ? 1 : 0.5 }}
       initial={{ opacity: 0, scale: 0.7, y: 30 }}
       animate={inView ? { opacity: achievement.unlocked ? 1 : 0.5, scale: 1, y: 0 } : {}}
@@ -50,13 +50,13 @@ function Badge({ achievement, index, inView }) {
 
       {!achievement.unlocked && (
         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-black/40 backdrop-blur-sm">
-          <span className="font-hud text-sm tracking-widest text-white/70">LOCKED</span>
+          <span className="font-hud text-[10px] tracking-widest text-white/70 sm:text-sm">LOCKED</span>
         </div>
       )}
 
       <div className="relative mb-3">
         <motion.div
-          className="mx-auto flex h-14 w-14 items-center justify-center rounded-full font-hud text-xs font-bold text-white"
+          className="mx-auto flex h-12 w-12 items-center justify-center rounded-full font-hud text-[10px] font-bold text-white sm:h-14 sm:w-14 sm:text-xs"
           style={{
             background: `radial-gradient(circle, ${achievement.color}20, transparent)`,
             border: `1px solid ${achievement.color}40`,
@@ -72,8 +72,8 @@ function Badge({ achievement, index, inView }) {
           <div
             className="absolute inset-0 m-auto rounded-full"
             style={{
-              width: 56,
-              height: 56,
+              width: 48,
+              height: 48,
               border: `1px solid ${achievement.color}30`,
               animation: 'spin-slow 8s linear infinite',
               transformOrigin: 'center',
@@ -82,12 +82,12 @@ function Badge({ achievement, index, inView }) {
         )}
       </div>
 
-      <h3 className="mb-1 font-hud text-sm font-bold text-white">{achievement.title}</h3>
-      <p className="mb-3 font-ui text-xs leading-tight text-white/50">{achievement.desc}</p>
+      <h3 className="mb-1 font-hud text-xs font-bold text-white sm:text-sm">{achievement.title}</h3>
+      <p className="mb-3 font-ui text-[10px] leading-tight text-white/50 sm:text-xs">{achievement.desc}</p>
 
       <div className="flex items-center justify-center gap-2">
         <div className="h-1.5 w-1.5 rounded-full" style={{ background: achievement.color, boxShadow: `0 0 5px ${achievement.color}` }} />
-        <span className="font-hud text-[8px] tracking-widest" style={{ color: achievement.color }}>
+        <span className="font-hud text-[7px] tracking-widest sm:text-[8px]" style={{ color: achievement.color }}>
           {achievement.unlocked ? `UNLOCKED ${achievement.year}` : 'LOCKED'}
         </span>
       </div>
@@ -97,34 +97,35 @@ function Badge({ achievement, index, inView }) {
 
 function TechDisplay({ inView }) {
   return (
-    <div className="mt-20 w-full">
+    <div className="mt-16 w-full sm:mt-20">
       <motion.div
-        className="mb-10 text-center sm:mb-12"
+        className="mb-8 text-center sm:mb-10 sm:mb-12"
         initial={{ opacity: 0 }}
         animate={inView ? { opacity: 1 } : {}}
       >
         <p className="section-label mb-3">TECH.MODULES.ACTIVE</p>
-        <h3 className="font-hud text-2xl font-bold gradient-text">Technology Display</h3>
+        <h3 className="font-hud text-xl font-bold gradient-text sm:text-2xl">Technology Display</h3>
       </motion.div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      {/* 3 cols on mobile, 3 on sm, 5 on md, all on lg */}
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
         {TECHS.map((tech, index) => (
           <motion.div
             key={tech.name}
-            className="flex w-full flex-col items-center gap-2 rounded-xl tech-module px-4 py-4 text-center"
+            className="flex w-full flex-col items-center gap-1.5 rounded-xl tech-module px-2 py-3 text-center sm:gap-2 sm:px-3 sm:py-4"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: index * 0.07 }}
           >
-            <span className="font-hud text-xs font-bold" style={{ color: tech.color }}>{tech.icon}</span>
-            <p className="font-hud text-xs font-bold text-white">{tech.name}</p>
+            <span className="font-hud text-[10px] font-bold sm:text-xs" style={{ color: tech.color }}>{tech.icon}</span>
+            <p className="font-hud text-[9px] font-bold text-white sm:text-xs">{tech.name}</p>
             <div className="flex items-center gap-1">
-              <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: tech.color }} />
+              <div className="h-1 w-1 rounded-full animate-pulse sm:h-1.5 sm:w-1.5" style={{ background: tech.color }} />
               <span
-                className="font-hud text-[7px] tracking-widest"
+                className="font-hud text-[6px] tracking-widest sm:text-[7px]"
                 style={{ color: tech.color === '#F7DF1E' ? '#bab000' : tech.color, opacity: 0.8 }}
               >
-                {tech.category === 'Learning' ? 'IN PROGRESS' : 'ACTIVE'}
+                {tech.category === 'Learning' ? 'IN PROG' : 'ACTIVE'}
               </span>
             </div>
           </motion.div>
@@ -147,30 +148,31 @@ export default function AchievementsSection() {
 
       <div className="section-inner flex w-full flex-col items-center">
         <motion.div
-          className="mb-16 w-full text-center"
+          className="mb-12 w-full text-center sm:mb-16"
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7 }}
         >
           <p className="section-label mb-4">ACHIEVEMENT.REGISTRY</p>
           <h2 className="section-header gradient-text">Achievements</h2>
-          <p className="mt-2 font-ui text-white/50">Unlocked milestones from the journey so far.</p>
+          <p className="mt-2 font-ui text-sm text-white/50 sm:text-base">Unlocked milestones from the journey so far.</p>
           <div className="section-sep mt-4" />
         </motion.div>
 
-        <div className="mb-6 grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {/* Badge grid: 2 cols mobile, 3 sm, 4 lg */}
+        <div className="mb-6 grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           {ACHIEVEMENTS.map((achievement, index) => (
             <Badge key={achievement.id} achievement={achievement} index={index} inView={inView} />
           ))}
         </div>
 
         <motion.div
-          className="rounded-xl glass-card p-4 text-center"
+          className="rounded-xl glass-card p-3 text-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 1.2 }}
         >
-          <p className="font-hud text-[9px] tracking-widest text-white/40">
+          <p className="font-hud text-[8px] tracking-widest text-white/40 sm:text-[9px]">
             7 OF 8 ACHIEVEMENTS UNLOCKED // MORE COMING AS THE JOURNEY CONTINUES
           </p>
         </motion.div>

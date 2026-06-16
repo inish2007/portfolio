@@ -29,8 +29,7 @@ const LOG_MESSAGES = [
 
 function OrbitNode({ skill, onSelect, isSelected, pausedAngle }) {
   const ref = useRef();
-  const { camera } = useThree();
-  const angleRef = useRef(skill.radius); // dummy init
+  const angleRef = useRef(skill.radius);
 
   useFrame((state) => {
     const t = isSelected && pausedAngle != null
@@ -96,7 +95,6 @@ function AICore({ selectedSkill, setSelectedSkill, mouse }) {
     const t = state.clock.getElapsedTime();
     if (groupRef.current) {
       groupRef.current.rotation.y = t * 0.18;
-      // Mouse-reactive tilt (lerp toward target)
       const targetX = mouse.current.y * 0.25;
       const targetZ = -mouse.current.x * 0.25;
       groupRef.current.rotation.x += (targetX - groupRef.current.rotation.x) * 0.04;
@@ -123,7 +121,6 @@ function AICore({ selectedSkill, setSelectedSkill, mouse }) {
         <sphereGeometry args={[1.35, 32, 32]} />
         <meshBasicMaterial color="#00D4FF" transparent opacity={0.06} side={THREE.BackSide} />
       </mesh>
-
       <Sphere args={[1, 96, 96]}>
         <MeshDistortMaterial
           color="#5A189A"
@@ -135,12 +132,10 @@ function AICore({ selectedSkill, setSelectedSkill, mouse }) {
           emissiveIntensity={0.35}
         />
       </Sphere>
-
       <mesh>
         <sphereGeometry args={[1.08, 24, 24]} />
         <meshBasicMaterial color="#00D4FF" wireframe transparent opacity={0.15} />
       </mesh>
-
       <Torus ref={ring1Ref} args={[1.7, 0.015, 16, 120]} rotation={[Math.PI / 2.1, 0, 0]}>
         <meshBasicMaterial color="#00D4FF" transparent opacity={0.5} />
       </Torus>
@@ -150,7 +145,6 @@ function AICore({ selectedSkill, setSelectedSkill, mouse }) {
       <Torus ref={ring3Ref} args={[1.35, 0.01, 16, 120]} rotation={[0, Math.PI / 2.5, Math.PI / 6]}>
         <meshBasicMaterial color="#5A189A" transparent opacity={0.5} />
       </Torus>
-
       {SKILLS.map((skill) => (
         <OrbitNode
           key={skill.name}
@@ -160,16 +154,13 @@ function AICore({ selectedSkill, setSelectedSkill, mouse }) {
           pausedAngle={pausedAngles[skill.name]}
         />
       ))}
-
       <points>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[innerStars, 3]} />
         </bufferGeometry>
         <pointsMaterial color="#00D4FF" size={0.025} transparent opacity={0.5} sizeAttenuation />
       </points>
-
       <Sparkles count={40} scale={4} size={2} speed={0.3} color="#FF4FD8" opacity={0.4} />
-
       <pointLight position={[3, 3, 3]} color="#00D4FF" intensity={2.2} />
       <pointLight position={[-3, -3, 3]} color="#5A189A" intensity={1.8} />
       <pointLight position={[0, 0, -4]} color="#FF4FD8" intensity={1.2} />
@@ -183,7 +174,6 @@ function AICore({ selectedSkill, setSelectedSkill, mouse }) {
 function CoreFallback2D({ selectedSkill, setSelectedSkill }) {
   return (
     <div className="relative flex h-full w-full items-center justify-center">
-      {/* Core glow */}
       <div
         className="absolute h-40 w-40 rounded-full animate-pulse"
         style={{
@@ -198,17 +188,15 @@ function CoreFallback2D({ selectedSkill, setSelectedSkill }) {
           boxShadow: '0 0 60px rgba(0,212,255,0.4)',
         }}
       />
-      {/* Orbit rings as CSS */}
       {SKILLS.map((skill, i) => (
         <div
           key={skill.name}
-          className="absolute rounded-full border animate-spin cursor-pointer"
+          className="absolute rounded-full border cursor-pointer"
           style={{
-            width: `${160 + i * 50}px`,
-            height: `${160 + i * 50}px`,
+            width: `${140 + i * 46}px`,
+            height: `${140 + i * 46}px`,
             borderColor: `${skill.color}55`,
-            animationDuration: `${10 + i * 4}s`,
-            animationDirection: i % 2 ? 'reverse' : 'normal',
+            animation: `spin ${10 + i * 4}s linear infinite ${i % 2 ? 'reverse' : 'normal'}`,
           }}
           onClick={() => setSelectedSkill(selectedSkill?.name === skill.name ? null : skill)}
         >
@@ -224,7 +212,7 @@ function CoreFallback2D({ selectedSkill, setSelectedSkill }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-6 rounded-lg border px-4 py-2 text-xs font-hud backdrop-blur-md"
+            className="absolute bottom-4 rounded-lg border px-4 py-2 text-xs font-hud backdrop-blur-md"
             style={{ borderColor: selectedSkill.color, background: 'rgba(10,10,20,0.85)', color: selectedSkill.color }}
           >
             <p className="font-bold mb-1">{selectedSkill.name}</p>
@@ -288,10 +276,7 @@ function CountUpMetric({ value, label, delay }) {
       ([entry]) => {
         if (entry.isIntersecting && !started) {
           setStarted(true);
-          if (isInf) {
-            setDisplay('INF');
-            return;
-          }
+          if (isInf) { setDisplay('INF'); return; }
           const duration = 1200;
           const start = performance.now();
           const animate = (now) => {
@@ -310,11 +295,11 @@ function CountUpMetric({ value, label, delay }) {
   }, [started, numeric, suffix, isInf, delay]);
 
   return (
-    <div ref={ref} className="text-center lg:text-left border-l border-purple-500/20 pl-4">
-      <p className="font-hud text-2xl font-bold text-cyan-400 text-glow-blue sm:text-3xl xl:text-4xl tabular-nums">
+    <div ref={ref} className="text-center border-l border-purple-500/20 pl-3 lg:text-left lg:pl-4">
+      <p className="font-hud text-xl font-bold text-cyan-400 text-glow-blue sm:text-2xl xl:text-3xl tabular-nums">
         {display}
       </p>
-      <p className="mt-1 font-hud text-[9px] font-bold uppercase tracking-widest text-white/50">{label}</p>
+      <p className="mt-1 font-hud text-[8px] font-bold uppercase tracking-widest text-white/50">{label}</p>
     </div>
   );
 }
@@ -329,7 +314,7 @@ function SystemLogTicker() {
   }, []);
 
   return (
-    <div className="absolute bottom-4 left-4 z-20 max-w-[140px] overflow-hidden h-3">
+    <div className="absolute bottom-3 left-3 z-20 max-w-[130px] overflow-hidden h-3">
       <AnimatePresence mode="wait">
         <motion.p
           key={idx}
@@ -357,7 +342,6 @@ function CircuitLines() {
           <stop offset="100%" stopColor="#FF4FD8" stopOpacity="0" />
         </linearGradient>
       </defs>
-      {/* top-left to top-right */}
       <motion.path
         d="M 8 8 H 40 L 48 16 H 92"
         stroke="url(#circuitGrad)"
@@ -367,7 +351,6 @@ function CircuitLines() {
         animate={{ pathLength: 1, opacity: 1 }}
         transition={{ duration: 2, ease: 'easeInOut' }}
       />
-      {/* bottom-left to bottom-right */}
       <motion.path
         d="M 8 92 H 35 L 43 84 H 92"
         stroke="url(#circuitGrad)"
@@ -377,7 +360,6 @@ function CircuitLines() {
         animate={{ pathLength: 1, opacity: 1 }}
         transition={{ duration: 2, delay: 0.3, ease: 'easeInOut' }}
       />
-      {/* nodes */}
       {[[8, 8], [92, 16], [8, 92], [92, 84]].map(([cx, cy], i) => (
         <motion.circle
           key={i}
@@ -408,7 +390,6 @@ export default function HeroSection() {
   const sectionRef = useRef(null);
   const mouse = useRef({ x: 0, y: 0 });
 
-  // Scroll-reactive camera transform values
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
   const cameraZ = useTransform(scrollYProgress, [0, 1], [4.5, 7]);
   const cameraRotY = useTransform(scrollYProgress, [0, 1], [0, Math.PI / 2.2]);
@@ -427,21 +408,20 @@ export default function HeroSection() {
     const timeout = setTimeout(() => {
       if (!isDeleting) {
         setTypedText(current.slice(0, charIdx + 1));
-        setCharIdx((value) => value + 1);
+        setCharIdx((v) => v + 1);
         if (charIdx === current.length) setTimeout(() => setIsDeleting(true), 1800);
       } else {
         setTypedText(current.slice(0, charIdx - 1));
-        setCharIdx((value) => value - 1);
+        setCharIdx((v) => v - 1);
         if (charIdx === 0) {
           setIsDeleting(false);
-          setTextIdx((value) => (value + 1) % HERO_TEXTS.length);
+          setTextIdx((v) => (v + 1) % HERO_TEXTS.length);
         }
       }
     }, isDeleting ? 60 : 100);
     return () => clearTimeout(timeout);
   }, [charIdx, isDeleting, textIdx]);
 
-  // Track mouse for 3D core reaction + parallax background
   const handleMouseMove = (e) => {
     const rect = sectionRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -458,20 +438,17 @@ export default function HeroSection() {
       ref={sectionRef}
       id="hero"
       onMouseMove={handleMouseMove}
-      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 pb-20 pt-32 sm:px-8 md:px-12 lg:px-16"
+      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 lg:px-10 lg:pt-32"
     >
-      {/* Background Overlays with parallax */}
-      <motion.div
-        className="absolute inset-0 z-[1] grid-overlay opacity-20"
-        style={{ x: bgParallaxX }}
-      />
+      {/* Background */}
+      <motion.div className="absolute inset-0 z-[1] grid-overlay opacity-20" style={{ x: bgParallaxX }} />
       <div
         className="absolute inset-0 z-[1]"
         style={{ background: 'radial-gradient(ellipse 60% 60% at 50% 30%, rgba(90,24,154,0.18) 0%, transparent 70%)' }}
       />
 
       <div className="relative z-10 mx-auto w-full max-w-7xl">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8 xl:gap-16">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-8 xl:gap-12">
 
           {/* Left Column */}
           <motion.div
@@ -480,78 +457,76 @@ export default function HeroSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.9, delay: 0.2 }}
           >
-            <div className="mb-6 inline-flex items-center gap-3 border border-cyan-400/30 glass-card px-4 py-2 sm:mb-8">
-              <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="font-hud text-[10px] tracking-[0.4em] text-cyan-400">
+            {/* Status badge */}
+            <div className="mb-5 inline-flex items-center gap-2 border border-cyan-400/30 glass-card px-3 py-1.5 sm:mb-6 sm:gap-3 sm:px-4 sm:py-2">
+              <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="font-hud text-[8px] tracking-[0.3em] text-cyan-400 sm:text-[10px] sm:tracking-[0.4em]">
                 COMMAND BRIDGE // INISH OS v2.6
               </span>
             </div>
 
-            <h1 className="mb-4 font-hud text-4xl font-black leading-tight tracking-tight sm:text-6xl md:text-7xl xl:text-8xl">
+            {/* Name */}
+            <h1 className="mb-3 font-hud font-black leading-tight tracking-tight"
+                style={{ fontSize: 'clamp(2.2rem, 10vw, 5rem)' }}>
               <span className="block text-white/90">K INISH</span>
               <span className="block gradient-text-shimmer">KUMAR</span>
             </h1>
 
-            <p className="mb-4 font-hud text-lg font-bold tracking-wider text-purple-300 sm:text-2xl">
-              B.Tech CSE (AI & ML)
+            <p className="mb-3 font-hud text-base font-bold tracking-wider text-purple-300 sm:text-xl lg:text-2xl">
+              B.Tech CSE (AI &amp; ML)
             </p>
 
-            <div className="mb-8 flex h-10 items-center justify-center gap-2 lg:justify-start">
-              <span className="font-hud text-xl font-bold text-cyan-400 sm:text-2xl text-glow-blue">
+            {/* Typing text */}
+            <div className="mb-6 flex h-8 items-center justify-center gap-2 lg:justify-start">
+              <span className="font-hud text-lg font-bold text-cyan-400 sm:text-xl text-glow-blue">
                 {typedText}
               </span>
-              <span className="font-hud text-xl text-cyan-400 animate-pulse sm:text-2xl text-glow-blue">|</span>
+              <span className="font-hud text-lg text-cyan-400 animate-pulse sm:text-xl text-glow-blue">|</span>
             </div>
 
-            <p className="mx-auto mb-10 max-w-xl border-t-2 border-purple-500/40 pt-6 font-ui text-sm leading-relaxed text-white/75 sm:text-base lg:mx-0 xl:max-w-2xl xl:text-lg">
+            <p className="mx-auto mb-8 max-w-xl border-t-2 border-purple-500/40 pt-5 font-ui text-sm leading-relaxed text-white/75 sm:text-base lg:mx-0 xl:max-w-2xl">
               "Building intelligent systems, modern web experiences, and the foundation for future AI technologies."
             </p>
 
-            {/* Action Grid with magnetic buttons */}
-            <div className="mb-12 grid w-full max-w-md grid-cols-2 gap-4 sm:max-w-xl sm:grid-cols-4 lg:max-w-none xl:gap-4">
+            {/* Action buttons — 2 cols on mobile, 4 on sm+ */}
+            <div className="mb-10 grid w-full max-w-xs grid-cols-2 gap-3 sm:max-w-lg sm:grid-cols-4 sm:gap-3 lg:max-w-none">
               <MagneticButton
-                onClick={() => {
-                  scrollTo('projects');
-                  triggerNebula('Mission Archive is now open, Commander.');
-                }}
-                className="btn-primary flex w-full items-center justify-center gap-2 text-xs sm:text-sm px-3 py-3"
+                onClick={() => { scrollTo('projects'); triggerNebula('Mission Archive is now open, Commander.'); }}
+                className="btn-primary flex w-full items-center justify-center gap-1.5 text-xs py-3"
               >
-                <Eye size={14} />
+                <Eye size={13} />
                 Missions
               </MagneticButton>
 
               <MagneticButton
                 onClick={() => scrollTo('about')}
-                className="btn-secondary flex w-full items-center justify-center gap-2 text-xs sm:text-sm px-3 py-3"
+                className="btn-secondary flex w-full items-center justify-center gap-1.5 text-xs py-3"
               >
-                <ChevronRight size={14} />
+                <ChevronRight size={13} />
                 Terminal
               </MagneticButton>
 
               <MagneticButton
                 as="a"
                 href="#"
-                onClick={(event) => {
-                  event.preventDefault();
-                  triggerNebula('Resume download initiated. Standing by.');
-                }}
-                className="btn-primary flex w-full items-center justify-center gap-2 text-xs sm:text-sm px-3 py-3"
+                onClick={(e) => { e.preventDefault(); triggerNebula('Resume download initiated. Standing by.'); }}
+                className="btn-primary flex w-full items-center justify-center gap-1.5 text-xs py-3"
               >
-                <Download size={14} />
+                <Download size={13} />
                 Resume
               </MagneticButton>
 
               <MagneticButton
                 onClick={() => scrollTo('contact')}
-                className="btn-secondary flex w-full items-center justify-center gap-2 text-xs sm:text-sm px-3 py-3"
+                className="btn-secondary flex w-full items-center justify-center gap-1.5 text-xs py-3"
               >
-                <Mail size={14} />
+                <Mail size={13} />
                 Contact
               </MagneticButton>
             </div>
 
-            {/* Count-up metrics */}
-            <div className="grid w-full max-w-md grid-cols-2 gap-6 sm:max-w-xl sm:grid-cols-4 lg:max-w-none">
+            {/* Metrics — 2 cols on mobile, 4 on sm+ */}
+            <div className="grid w-full max-w-xs grid-cols-2 gap-4 sm:max-w-lg sm:grid-cols-4 lg:max-w-none">
               {[
                 { val: '3+', label: 'Missions' },
                 { val: '6+', label: 'Technologies' },
@@ -565,36 +540,36 @@ export default function HeroSection() {
 
           {/* Right Column: 3D / Fallback Core */}
           <motion.div
-            className="relative mx-auto flex w-full max-w-[22rem] items-center justify-center sm:max-w-md lg:col-span-5 lg:max-w-none lg:justify-self-end"
+            className="relative mx-auto flex w-full max-w-[18rem] items-center justify-center sm:max-w-xs lg:col-span-5 lg:max-w-none lg:justify-self-end"
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.5, type: 'spring' }}
           >
-            <div className="relative aspect-square w-full rounded-2xl border border-cyan-500/20 bg-purple-950/10 backdrop-blur-sm overflow-hidden h-[340px] sm:h-[420px] xl:h-[480px]">
+            <div className="relative aspect-square w-full rounded-2xl border border-cyan-500/20 bg-purple-950/10 backdrop-blur-sm overflow-hidden"
+                 style={{ height: 'clamp(260px, 50vw, 480px)' }}>
               <div className="absolute inset-0 z-10 grid-overlay opacity-10 pointer-events-none" />
               <CircuitLines />
 
               {/* HUD Corners */}
-              <div className="absolute left-4 top-4 z-20">
-                <p className="font-hud text-[8px] tracking-[0.3em] text-cyan-400/70">AI CORE</p>
-                <p className="font-hud text-[7px] tracking-wider text-purple-400/60">NEURAL ENGINE v3</p>
+              <div className="absolute left-3 top-3 z-20">
+                <p className="font-hud text-[7px] tracking-[0.25em] text-cyan-400/70">AI CORE</p>
+                <p className="font-hud text-[6px] tracking-wider text-purple-400/60">NEURAL ENGINE v3</p>
               </div>
-              <div className="absolute right-4 top-4 z-20 text-right">
-                <p className="font-hud text-[8px] tracking-[0.3em] text-cyan-400/70">STATUS: OPTIMAL</p>
+              <div className="absolute right-3 top-3 z-20 text-right">
+                <p className="font-hud text-[7px] tracking-[0.25em] text-cyan-400/70">STATUS: OPTIMAL</p>
                 <div className="flex items-center justify-end gap-1">
                   <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-                  <p className="font-hud text-[7px] text-green-400/70">LIVE</p>
+                  <p className="font-hud text-[6px] text-green-400/70">LIVE</p>
                 </div>
               </div>
 
-              {/* System log ticker (bottom-left, replaces static POWER text) */}
               <SystemLogTicker />
 
-              <div className="absolute bottom-4 right-4 z-20 text-right">
-                <p className="font-hud text-[7px] tracking-wider text-purple-400/50">NEBULA SYNCED</p>
+              <div className="absolute bottom-3 right-3 z-20 text-right">
+                <p className="font-hud text-[6px] tracking-wider text-purple-400/50">NEBULA SYNCED</p>
                 {selectedSkill && (
-                  <p className="font-hud text-[7px] tracking-wider mt-0.5" style={{ color: selectedSkill.color }}>
-                    INSPECTING: {selectedSkill.name.toUpperCase()}
+                  <p className="font-hud text-[6px] tracking-wider mt-0.5" style={{ color: selectedSkill.color }}>
+                    {selectedSkill.name.toUpperCase()}
                   </p>
                 )}
               </div>
@@ -614,9 +589,9 @@ export default function HeroSection() {
               )}
             </div>
 
-            {/* Floating Tags */}
+            {/* Floating Tags — only on xl */}
             <motion.div
-              className="absolute -left-6 top-1/4 hidden rounded-xl border border-purple-500/30 glass-card px-4 py-3 xl:block"
+              className="absolute -left-8 top-1/4 hidden rounded-xl border border-purple-500/30 glass-card px-4 py-3 xl:block"
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
@@ -626,7 +601,7 @@ export default function HeroSection() {
             </motion.div>
 
             <motion.div
-              className="absolute -right-6 bottom-1/4 hidden rounded-xl border border-cyan-500/30 glass-card px-4 py-3 xl:block"
+              className="absolute -right-8 bottom-1/4 hidden rounded-xl border border-cyan-500/30 glass-card px-4 py-3 xl:block"
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
             >
@@ -637,6 +612,7 @@ export default function HeroSection() {
           </motion.div>
         </div>
 
+        {/* Scroll cue */}
         <motion.div
           className="absolute bottom-[-40px] left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex"
           animate={{ opacity: [0.3, 1, 0.3] }}
@@ -649,8 +625,6 @@ export default function HeroSection() {
     </section>
   );
 }
-
-/* ---------------- SCROLL CAMERA CONTROLLER ---------------- */
 
 function ScrollCamera({ cameraZ, cameraRotY }) {
   useFrame(({ camera }) => {
