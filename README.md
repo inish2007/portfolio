@@ -16,5 +16,4 @@ React
 Tailwind CSS
 Three.js
 Framer Motion
-website link :
-portfolio-inishkumar.vercel.app
+
