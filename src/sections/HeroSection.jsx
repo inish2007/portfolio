@@ -60,7 +60,7 @@ function OrbitNode({ skill, onSelect, isSelected, pausedAngle }) {
       {isSelected && ref.current && (
         <Html position={ref.current.position} center distanceFactor={6}>
           <div className="rounded-lg border px-3 py-2 text-xs font-hud backdrop-blur-md whitespace-nowrap"
-               style={{ borderColor: skill.color, background: 'rgba(10,10,20,0.8)', color: skill.color }}>
+            style={{ borderColor: skill.color, background: 'rgba(10,10,20,0.8)', color: skill.color }}>
             <p className="font-bold mb-1">{skill.name}</p>
             <div className="h-1 w-24 rounded-full bg-white/10 overflow-hidden">
               <div className="h-full rounded-full" style={{ width: `${skill.level}%`, background: skill.color }} />
@@ -438,8 +438,9 @@ export default function HeroSection() {
       ref={sectionRef}
       id="hero"
       onMouseMove={handleMouseMove}
-      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 lg:px-10 lg:pt-32"
-    >
+      className="relative flex min-h-screen w-full items-start lg:items-center justify-center overflow-hidden px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 lg:px-10 lg:pt-32"
+>
+  
       {/* Background */}
       <motion.div className="absolute inset-0 z-[1] grid-overlay opacity-20" style={{ x: bgParallaxX }} />
       <div
