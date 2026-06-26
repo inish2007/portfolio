@@ -32,7 +32,7 @@ function SkillNode({ skill, index, inView }) {
 
   return (
     <motion.div
-      className="relative overflow-hidden rounded-xl glass-card p-6 skill-node"
+      className="relative overflow-hidden rounded-xl glass-card p-4 skill-node sm:p-6"
       style={{
         borderColor: hovered ? `${config.color}60` : 'rgba(0,212,255,0.15)',
         boxShadow: hovered ? `0 0 30px ${config.glow}` : 'none',
@@ -175,7 +175,7 @@ export default function SkillsSection() {
               />
             </motion.div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {SKILLS.filter((skill) => skill.category === category).map((skill, index) => (
                 <SkillNode
                   key={skill.name}

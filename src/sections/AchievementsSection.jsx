@@ -29,7 +29,7 @@ function Badge({ achievement, index, inView }) {
 
   return (
     <motion.div
-      className="relative cursor-default overflow-hidden rounded-xl achievement-badge p-4 text-center sm:p-5"
+      className="relative cursor-default overflow-hidden rounded-xl achievement-badge p-3 text-center sm:p-5"
       style={{ opacity: achievement.unlocked ? 1 : 0.5 }}
       initial={{ opacity: 0, scale: 0.7, y: 30 }}
       animate={inView ? { opacity: achievement.unlocked ? 1 : 0.5, scale: 1, y: 0 } : {}}
@@ -107,8 +107,7 @@ function TechDisplay({ inView }) {
         <h3 className="font-hud text-xl font-bold gradient-text sm:text-2xl">Technology Display</h3>
       </motion.div>
 
-      {/* 3 cols on mobile, 3 on sm, 5 on md, all on lg */}
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {TECHS.map((tech, index) => (
           <motion.div
             key={tech.name}

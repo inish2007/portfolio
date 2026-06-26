@@ -180,11 +180,9 @@ const CSS = `
   .nhud-contact-cta {
     display: none;
   }
-  @media (min-width: 640px) {
+  @media (min-width: 1024px) {
     .nhud-sys-pill { display: flex; }
     .nhud-clock { display: flex; }
-  }
-  @media (min-width: 1024px) {
     .nhud-contact-cta { display: block; }
   }
 `;
@@ -231,8 +229,14 @@ export default function NavHUD() {
     const el = document.getElementById(id);
     if (el) {
       const navHeight = navRef.current ? navRef.current.getBoundingClientRect().height : 80;
-      const elementTop = el.getBoundingClientRect().top + window.scrollY;
-      const offsetPosition = elementTop - navHeight - 20;
+      const target =
+        id === 'hero'
+          ? el
+          : el.querySelector('.section-header, .section-label') || el;
+      const elementTop = target.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = id === 'hero'
+        ? 0
+        : Math.max(0, elementTop - navHeight - 12);
       window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     }
     setActiveSection(id);

@@ -1,27 +1,31 @@
-import { useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { AppProvider } from './contexts/AppContext';
 import { useApp } from './contexts/useApp';
-import BootSequence from './components/BootSequence';
 import NavHUD from './components/NavHUD';
 import NebulaAssistant from './components/NebulaAssistant';
 import StarField from './components/StarField';
-import HeroSection from './sections/HeroSection';
 import AboutSection from './sections/AboutSection';
 import SkillsSection from './sections/SkillsSection';
 import ProjectsSection from './sections/ProjectsSection';
-import GalaxySection from './sections/GalaxySection';
 import AchievementsSection from './sections/AchievementsSection';
 import ContactSection from './sections/ContactSection';
 import { AnimatePresence, motion } from 'framer-motion';
+
+const HeroSection = lazy(() => import('./sections/HeroSection'));
+const GalaxySection = lazy(() => import('./sections/GalaxySection'));
+const BootSequence = lazy(() => import('./components/BootSequence'));
 
 const SECTION_IDS = ['hero', 'about', 'skills', 'projects', 'galaxy', 'achievements', 'contact'];
 
 // Custom cursor component
 function CustomCursor() {
+  const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
   const dotRef = useRef(null);
   const outlineRef = useRef(null);
 
   useEffect(() => {
+    if (isTouchDevice) return undefined;
+
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
     let outlineX = mouseX;
@@ -53,7 +57,9 @@ function CustomCursor() {
       window.removeEventListener('mousemove', onMouseMove);
       cancelAnimationFrame(animId);
     };
-  }, []);
+  }, [isTouchDevice]);
+
+  if (isTouchDevice) return null;
 
   return (
     <>
@@ -96,7 +102,11 @@ function MainContent() {
 
   return (
     <>
-      {!booted && <BootSequence />}
+      {!booted && (
+        <Suspense fallback={null}>
+          <BootSequence />
+        </Suspense>
+      )}
 
       <AnimatePresence>
         {booted && (
@@ -118,7 +128,9 @@ function MainContent() {
 
             {/* Main content */}
             <main className="relative z-10">
-              <HeroSection />
+              <Suspense fallback={null}>
+                <HeroSection />
+              </Suspense>
               <div className="section-sep mx-auto max-w-4xl" />
               <AboutSection />
               <div className="section-sep mx-auto max-w-4xl" />
@@ -126,7 +138,9 @@ function MainContent() {
               <div className="section-sep mx-auto max-w-4xl" />
               <ProjectsSection />
               <div className="section-sep mx-auto max-w-4xl" />
-              <GalaxySection />
+              <Suspense fallback={null}>
+                <GalaxySection />
+              </Suspense>
               <div className="section-sep mx-auto max-w-4xl" />
               <AchievementsSection />
               <div className="section-sep mx-auto max-w-4xl" />

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { MeshDistortMaterial, Sphere, Torus, Trail, Sparkles, Html } from '@react-three/drei';
 import { ChevronRight, Download, Eye, Mail } from 'lucide-react';
 import * as THREE from 'three';
@@ -24,6 +24,26 @@ const LOG_MESSAGES = [
   'Nebula link established.',
   'Scanning command bridge...',
 ];
+
+function createSeededRandom(seed = 1337) {
+  let value = seed;
+  return () => {
+    value = (value * 1664525 + 1013904223) % 4294967296;
+    return value / 4294967296;
+  };
+}
+
+function createInnerStarPositions() {
+  const random = createSeededRandom();
+  const positions = [];
+  for (let i = 0; i < 80; i++) {
+    const r = 2.6 + random() * 0.8;
+    const theta = random() * Math.PI * 2;
+    const phi = Math.acos(2 * random() - 1);
+    positions.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+  }
+  return new Float32Array(positions);
+}
 
 /* ---------------- 3D CORE ---------------- */
 
@@ -55,19 +75,19 @@ function OrbitNode({ skill, onSelect, isSelected, pausedAngle }) {
         >
           <sphereGeometry args={[isSelected ? 0.09 : 0.06, 16, 16]} />
           <meshBasicMaterial color={skill.color} toneMapped={false} />
+          {isSelected && (
+            <Html center distanceFactor={6}>
+              <div className="rounded-lg border px-3 py-2 text-xs font-hud backdrop-blur-md whitespace-nowrap"
+                style={{ borderColor: skill.color, background: 'rgba(10,10,20,0.8)', color: skill.color }}>
+                <p className="font-bold mb-1">{skill.name}</p>
+                <div className="h-1 w-24 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${skill.level}%`, background: skill.color }} />
+                </div>
+              </div>
+            </Html>
+          )}
         </mesh>
       </Trail>
-      {isSelected && ref.current && (
-        <Html position={ref.current.position} center distanceFactor={6}>
-          <div className="rounded-lg border px-3 py-2 text-xs font-hud backdrop-blur-md whitespace-nowrap"
-            style={{ borderColor: skill.color, background: 'rgba(10,10,20,0.8)', color: skill.color }}>
-            <p className="font-bold mb-1">{skill.name}</p>
-            <div className="h-1 w-24 rounded-full bg-white/10 overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: `${skill.level}%`, background: skill.color }} />
-            </div>
-          </div>
-        </Html>
-      )}
     </group>
   );
 }
@@ -79,17 +99,7 @@ function AICore({ selectedSkill, setSelectedSkill, mouse }) {
   const ring3Ref = useRef();
   const coreGlowRef = useRef();
   const [pausedAngles, setPausedAngles] = useState({});
-
-  const innerStars = useMemo(() => {
-    const positions = [];
-    for (let i = 0; i < 80; i++) {
-      const r = 2.6 + Math.random() * 0.8;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      positions.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
-    }
-    return new Float32Array(positions);
-  }, []);
+  const innerStars = useMemo(() => createInnerStarPositions(), []);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
@@ -172,40 +182,61 @@ function AICore({ selectedSkill, setSelectedSkill, mouse }) {
 /* ---------------- 2D MOBILE FALLBACK ---------------- */
 
 function CoreFallback2D({ selectedSkill, setSelectedSkill }) {
+  const rings = [
+    { skill: SKILLS[0], size: '55%', duration: 10, direction: 'normal' },
+    { skill: SKILLS[1], size: '72%', duration: 14, direction: 'reverse' },
+    { skill: SKILLS[2], size: '88%', duration: 18, direction: 'normal' },
+  ];
+
   return (
-    <div className="relative flex h-full w-full items-center justify-center">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
       <div
-        className="absolute h-40 w-40 rounded-full animate-pulse"
+        className="absolute rounded-full animate-pulse"
         style={{
-          background: 'radial-gradient(circle, rgba(0,212,255,0.35) 0%, rgba(90,24,154,0.25) 60%, transparent 80%)',
-          filter: 'blur(8px)',
+          width: '45%',
+          height: '45%',
+          background: 'radial-gradient(circle, rgba(0,212,255,0.28) 0%, rgba(90,24,154,0.22) 60%, transparent 80%)',
+          filter: 'blur(10px)',
         }}
       />
       <div
-        className="absolute h-32 w-32 rounded-full"
+        className="absolute rounded-full border border-cyan-400/30"
         style={{
-          background: 'linear-gradient(135deg, #5A189A, #00D4FF)',
-          boxShadow: '0 0 60px rgba(0,212,255,0.4)',
+          width: '36%',
+          height: '36%',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'linear-gradient(135deg, rgba(90,24,154,0.75), rgba(0,212,255,0.7))',
+          boxShadow: '0 0 45px rgba(0,212,255,0.28)',
         }}
       />
-      {SKILLS.map((skill, i) => (
-        <div
+      <div
+        className="absolute rounded-full border border-cyan-400/15"
+        style={{ width: '48%', height: '48%', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+      />
+
+      {rings.map(({ skill, size, duration, direction }) => (
+        <button
           key={skill.name}
-          className="absolute rounded-full border cursor-pointer"
+          type="button"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border bg-transparent"
           style={{
-            width: `${140 + i * 46}px`,
-            height: `${140 + i * 46}px`,
+            width: size,
+            height: size,
             borderColor: `${skill.color}55`,
-            animation: `spin ${10 + i * 4}s linear infinite ${i % 2 ? 'reverse' : 'normal'}`,
+            animation: `spin ${duration}s linear infinite ${direction}`,
           }}
           onClick={() => setSelectedSkill(selectedSkill?.name === skill.name ? null : skill)}
+          aria-label={`Inspect ${skill.name}`}
         >
-          <div
-            className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full"
+          <span
+            className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full"
             style={{ background: skill.color, boxShadow: `0 0 10px ${skill.color}` }}
           />
-        </div>
+        </button>
       ))}
+
       <AnimatePresence>
         {selectedSkill && (
           <motion.div
@@ -215,8 +246,8 @@ function CoreFallback2D({ selectedSkill, setSelectedSkill }) {
             className="absolute bottom-4 rounded-lg border px-4 py-2 text-xs font-hud backdrop-blur-md"
             style={{ borderColor: selectedSkill.color, background: 'rgba(10,10,20,0.85)', color: selectedSkill.color }}
           >
-            <p className="font-bold mb-1">{selectedSkill.name}</p>
-            <div className="h-1 w-24 rounded-full bg-white/10 overflow-hidden">
+            <p className="mb-1 font-bold">{selectedSkill.name}</p>
+            <div className="h-1 w-24 overflow-hidden rounded-full bg-white/10">
               <div className="h-full rounded-full" style={{ width: `${selectedSkill.level}%`, background: selectedSkill.color }} />
             </div>
           </motion.div>
@@ -295,7 +326,7 @@ function CountUpMetric({ value, label, delay }) {
   }, [started, numeric, suffix, isInf, delay]);
 
   return (
-    <div ref={ref} className="text-center border-l border-purple-500/20 pl-3 lg:text-left lg:pl-4">
+    <div ref={ref} className="border-l border-purple-500/20 px-2 text-center lg:px-0 lg:pl-4 lg:text-left">
       <p className="font-hud text-xl font-bold text-cyan-400 text-glow-blue sm:text-2xl xl:text-3xl tabular-nums">
         {display}
       </p>
@@ -385,7 +416,6 @@ export default function HeroSection() {
   const [charIdx, setCharIdx] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
 
   const sectionRef = useRef(null);
   const mouse = useRef({ x: 0, y: 0 });
@@ -394,13 +424,6 @@ export default function HeroSection() {
   const cameraZ = useTransform(scrollYProgress, [0, 1], [4.5, 7]);
   const cameraRotY = useTransform(scrollYProgress, [0, 1], [0, Math.PI / 2.2]);
   const bgParallaxX = useTransform(scrollYProgress, [0, 1], [0, -40]);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Typing engine
   useEffect(() => {
@@ -438,7 +461,8 @@ export default function HeroSection() {
       ref={sectionRef}
       id="hero"
       onMouseMove={handleMouseMove}
-      className="relative flex min-h-screen w-full items-start lg:items-center justify-center overflow-hidden px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 lg:px-10 lg:pt-32"
+      className="relative flex min-h-screen w-full items-start justify-center overflow-hidden px-4 pb-20 pt-48 sm:pt-40 md:pt-36 lg:items-center lg:px-16 lg:pt-32"
+      style={{ scrollMarginTop: '90px' }}
 >
   
       {/* Background */}
@@ -449,17 +473,18 @@ export default function HeroSection() {
       />
 
       <div className="relative z-10 mx-auto w-full max-w-7xl">
-        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-8 xl:gap-12">
+        <div className="grid grid-cols-1 items-center gap-8 overflow-hidden lg:grid-cols-12 lg:gap-8 xl:gap-12">
 
           {/* Left Column */}
           <motion.div
-            className="flex w-full flex-col items-center text-center lg:col-span-7 lg:items-start lg:text-left"
+            className="order-1 flex w-full flex-col items-center text-center lg:order-none lg:col-span-7 lg:items-start lg:text-left"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.9, delay: 0.2 }}
           >
             {/* Status badge */}
-            <div className="mb-5 inline-flex items-center gap-2 border border-cyan-400/30 glass-card px-3 py-1.5 sm:mb-6 sm:gap-3 sm:px-4 sm:py-2">
+            <div className="block h-20 lg:hidden" />
+            <div className="mb-4 inline-flex items-center gap-3 border border-cyan-400/30 glass-card px-4 py-2 sm:mb-8">
               <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
               <span className="font-hud text-[8px] tracking-[0.3em] text-cyan-400 sm:text-[10px] sm:tracking-[0.4em]">
                 COMMAND BRIDGE // INISH OS v2.6
@@ -478,7 +503,7 @@ export default function HeroSection() {
             </p>
 
             {/* Typing text */}
-            <div className="mb-6 flex h-8 items-center justify-center gap-2 lg:justify-start">
+            <div className="mb-6 flex min-h-[2rem] items-center justify-center gap-2 lg:justify-start">
               <span className="font-hud text-lg font-bold text-cyan-400 sm:text-xl text-glow-blue">
                 {typedText}
               </span>
@@ -490,10 +515,10 @@ export default function HeroSection() {
             </p>
 
             {/* Action buttons — 2 cols on mobile, 4 on sm+ */}
-            <div className="mb-10 grid w-full max-w-xs grid-cols-2 gap-3 sm:max-w-lg sm:grid-cols-4 sm:gap-3 lg:max-w-none">
+            <div className="mb-10 grid w-full max-w-xs grid-cols-2 gap-3 sm:max-w-lg lg:max-w-none lg:grid-cols-4">
               <MagneticButton
                 onClick={() => { scrollTo('projects'); triggerNebula('Mission Archive is now open, Commander.'); }}
-                className="btn-primary flex w-full items-center justify-center gap-1.5 text-xs py-3"
+                className="btn-primary col-span-1 flex h-14 w-full items-center justify-center gap-1.5 px-4 text-sm"
               >
                 <Eye size={13} />
                 Missions
@@ -501,7 +526,7 @@ export default function HeroSection() {
 
               <MagneticButton
                 onClick={() => scrollTo('about')}
-                className="btn-secondary flex w-full items-center justify-center gap-1.5 text-xs py-3"
+                className="btn-secondary col-span-1 flex h-14 w-full items-center justify-center gap-1.5 px-4 text-sm"
               >
                 <ChevronRight size={13} />
                 Terminal
@@ -511,7 +536,7 @@ export default function HeroSection() {
                 as="a"
                 href="#"
                 onClick={(e) => { e.preventDefault(); triggerNebula('Resume download initiated. Standing by.'); }}
-                className="btn-primary flex w-full items-center justify-center gap-1.5 text-xs py-3"
+                className="btn-primary col-span-1 flex h-14 w-full items-center justify-center gap-1.5 px-4 text-sm"
               >
                 <Download size={13} />
                 Resume
@@ -519,7 +544,7 @@ export default function HeroSection() {
 
               <MagneticButton
                 onClick={() => scrollTo('contact')}
-                className="btn-secondary flex w-full items-center justify-center gap-1.5 text-xs py-3"
+                className="btn-secondary col-span-1 flex h-14 w-full items-center justify-center gap-1.5 px-4 text-sm"
               >
                 <Mail size={13} />
                 Contact
@@ -541,13 +566,15 @@ export default function HeroSection() {
 
           {/* Right Column: 3D / Fallback Core */}
           <motion.div
-            className="relative mx-auto flex w-full max-w-[18rem] items-center justify-center sm:max-w-xs lg:col-span-5 lg:max-w-none lg:justify-self-end"
+            className="relative mx-auto w-full overflow-hidden order-2 lg:order-none lg:col-span-5 lg:max-w-none lg:justify-self-end"
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.5, type: 'spring' }}
           >
-            <div className="relative aspect-square w-full rounded-2xl border border-cyan-500/20 bg-purple-950/10 backdrop-blur-sm overflow-hidden"
-                 style={{ height: 'clamp(260px, 50vw, 480px)' }}>
+            <div
+              className="relative w-full overflow-hidden rounded-2xl border border-cyan-500/20 bg-purple-950/10 backdrop-blur-sm"
+              style={{ height: '280px' }}
+            >
               <div className="absolute inset-0 z-10 grid-overlay opacity-10 pointer-events-none" />
               <CircuitLines />
 
@@ -575,9 +602,11 @@ export default function HeroSection() {
                 )}
               </div>
 
-              {isMobile ? (
+              <div className="h-full w-full lg:hidden">
                 <CoreFallback2D selectedSkill={selectedSkill} setSelectedSkill={setSelectedSkill} />
-              ) : (
+              </div>
+
+              <div className="hidden h-full w-full lg:block">
                 <Canvas
                   camera={{ position: [0, 0, 4.5], fov: 45 }}
                   dpr={[1, 1.5]}
@@ -587,7 +616,7 @@ export default function HeroSection() {
                   <ScrollCamera cameraZ={cameraZ} cameraRotY={cameraRotY} />
                   <AICore selectedSkill={selectedSkill} setSelectedSkill={setSelectedSkill} mouse={mouse} />
                 </Canvas>
-              )}
+              </div>
             </div>
 
             {/* Floating Tags — only on xl */}

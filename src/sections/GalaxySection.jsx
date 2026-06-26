@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion, useInView } from 'framer-motion';
 
 const PLANETS = [
@@ -92,7 +92,7 @@ const PLANETS = [
 function GalaxyCanvas({ containerRef, planets, inView }) {
   const canvasRef = useRef(null);
 
-  const drawCanvas = () => {
+  const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container || !inView) return;
@@ -135,11 +135,11 @@ function GalaxyCanvas({ containerRef, planets, inView }) {
       ctx.fillStyle = p.color + 'aa';
       ctx.fill();
     });
-  };
+  }, [containerRef, inView, planets]);
 
   useEffect(() => {
     drawCanvas();
-  }, [inView, containerRef, planets]);
+  }, [drawCanvas]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -149,7 +149,7 @@ function GalaxyCanvas({ containerRef, planets, inView }) {
     });
     ro.observe(container);
     return () => ro.disconnect();
-  }, [inView, containerRef, planets]);
+  }, [containerRef, drawCanvas]);
 
   return (
     <canvas
@@ -296,7 +296,6 @@ export default function GalaxySection() {
                   {/* Internal counter-rotated text to prevent numbers spinning upside down */}
                   <motion.span
                     className="font-mono font-black text-white select-none relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
-                    style={{ fontSize: planet.size * 0.26 }}
                     style={{ fontSize: planet.size * 0.26 }}
                     animate={{ rotate: -360 }}
                     transition={{ repeat: Infinity, duration: 25 + (index * 5), ease: 'linear' }}

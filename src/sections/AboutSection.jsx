@@ -54,7 +54,7 @@ export default function AboutSection() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <div className="mb-6 rounded-xl glass-card p-6 border border-white/10 sm:p-8" style={{ background: 'rgba(5, 5, 16, 0.45)' }}>
-              <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <div className="mb-8 flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center">
                 
                 {/* ── Avatar with Framer Motion Auto-Rotation ── */}
                 <div className="relative h-20 w-20 flex-shrink-0">
@@ -78,15 +78,15 @@ export default function AboutSection() {
                   </div>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <div className="mb-1 flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
                     <span className="font-mono text-[9px] tracking-widest text-green-400 font-bold">
                       IDENTITY VERIFIED
                     </span>
                   </div>
-                  <h3 className="font-mono text-2xl font-bold text-white">K Inish Kumar</h3>
-                  <p className="text-sm text-cyan-400 font-medium">
+                  <h3 className="break-words font-mono text-2xl font-bold text-white">K Inish Kumar</h3>
+                  <p className="break-words text-sm text-cyan-400 font-medium">
                     B.Tech Computer Science Engineering (AI &amp; ML)
                   </p>
                 </div>
@@ -103,7 +103,7 @@ export default function AboutSection() {
 
               <div className="grid grid-cols-2 gap-4 sm:gap-6">
                 {STATS.map((item) => (
-                  <div key={item.label} className="rounded-lg p-5 text-center sm:p-6 border border-purple-500/10" style={{ background: 'rgba(90, 24, 154, 0.08)' }}>
+                  <div key={item.label} className="rounded-lg border border-purple-500/10 p-3 text-center sm:p-6" style={{ background: 'rgba(90, 24, 154, 0.08)' }}>
                     <p className="font-mono text-2xl font-bold text-cyan-400 sm:text-3xl">{item.val}</p>
                     <p className="mt-2 font-mono text-[10px] font-bold uppercase tracking-widest text-white/60">
                       {item.label}
@@ -169,7 +169,7 @@ export default function AboutSection() {
 
             <div>
               <p className="font-mono text-[11px] tracking-widest font-bold text-white/40 mb-5">JOURNEY LOG</p>
-              <div className="relative pl-2">
+              <div className="relative overflow-hidden pl-2">
                 <div className="absolute bottom-4 left-7 top-4 w-[1px] bg-gradient-to-b from-cyan-500 via-cyan-500/40 to-transparent opacity-30" />
 
                 {TIMELINE.map((item, index) => (

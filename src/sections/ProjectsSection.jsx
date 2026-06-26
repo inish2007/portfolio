@@ -190,7 +190,7 @@ export default function ProjectsSection() {
           <div className="section-sep mt-4" />
         </motion.div>
 
-        <div className="grid w-full gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {MISSIONS.map((mission, index) => (
             <motion.div
               key={mission.id}

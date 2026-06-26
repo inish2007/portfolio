@@ -208,7 +208,7 @@ function startRenderer(canvas, getElapsed) {
 export default function BootSequence() {
   const { setBooted } = useApp();
   const canvasRef = useRef(null);
-  const startedAt = useRef(Date.now());
+  const startedAt = useRef(null);
   const timers = useRef([]);
 
   const [uiVisible, setUiVisible] = useState(false);
@@ -234,6 +234,10 @@ export default function BootSequence() {
 
   // ── Canvas resize ──
   useEffect(() => {
+    startedAt.current = Date.now();
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const observe = new ResizeObserver(() => {
@@ -243,7 +247,7 @@ export default function BootSequence() {
     observe.observe(canvas.parentElement);
     canvas.width = canvas.offsetWidth || window.innerWidth;
     canvas.height = canvas.offsetHeight || window.innerHeight;
-    const stop = startRenderer(canvas, () => Date.now() - startedAt.current);
+    const stop = startRenderer(canvas, () => Date.now() - (startedAt.current ?? Date.now()));
     return () => { observe.disconnect(); stop(); };
   }, []);
 
