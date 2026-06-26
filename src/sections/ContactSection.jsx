@@ -1,6 +1,12 @@
 import { useRef, useState } from 'react';
 import { AnimatePresence, motion, useInView } from 'framer-motion';
 import { Mail, Radio, Send, Zap } from 'lucide-react';
+import emailjs from '@emailjs/browser';
+import { useApp } from '../contexts/useApp';
+
+const EMAILJS_SERVICE_ID = 'service_vw9ui3s';
+const EMAILJS_TEMPLATE_ID = 'template_p3ajcmj';
+const EMAILJS_PUBLIC_KEY = 'INfWhLrofE5R-fLTy';
 
 const Github = ({ size = 24, ...props }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -52,20 +58,100 @@ function SignalPing({ color }) {
   );
 }
 
-export default function ContactSection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-100px' });
-  const [formState, setFormState] = useState({ name: '', email: '', message: '' });
-  const [sent, setSent] = useState(false);
-  const [sending, setSending] = useState(false);
+function CharCounter({ value, max }) {
+  const pct = value / max;
+  const color = pct > 0.9 ? '#FF4FD8' : pct > 0.7 ? '#fbbf24' : '#4ade80';
+  return (
+    <span className="font-hud text-[9px] tabular-nums" style={{ color }}>
+      {value}/{max}
+    </span>
+  );
+}
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setSending(true);
-    setTimeout(() => {
-      setSending(false);
-      setSent(true);
-    }, 2000);
+export default function ContactSection() {
+  const { triggerNebula } = useApp();
+  const ref = useRef(null);
+  const formRef = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-100px' });
+
+  const [formState, setFormState] = useState({ name: '', email: '', message: '' });
+  const [txStatus, setTxStatus] = useState('idle'); // idle | sending | success | error
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const MAX_MESSAGE = 1000;
+  const isLocked = txStatus === 'sending';
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'message' && value.length > MAX_MESSAGE) return;
+    setFormState((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isLocked) return;
+
+    // Validation checks
+    const nameTrimmed = formState.name.trim();
+    const emailTrimmed = formState.email.trim();
+    const messageTrimmed = formState.message.trim();
+
+    if (!nameTrimmed) {
+      triggerNebula('Transmission corrupt: Captain name is required.');
+      return;
+    }
+    if (!emailTrimmed) {
+      triggerNebula('Transmission corrupt: Return relay address (email) is required.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      triggerNebula('Transmission corrupt: Invalid relay frequency format (invalid email).');
+      return;
+    }
+    if (!messageTrimmed) {
+      triggerNebula('Transmission corrupt: Communication data stream is empty.');
+      return;
+    }
+    if (messageTrimmed.length < 10) {
+      triggerNebula('Transmission corrupt: Stream payload too small (minimum 10 characters).');
+      return;
+    }
+
+    setTxStatus('sending');
+    setErrorMsg('');
+
+    // Build template params manually so variable names are guaranteed correct
+    const templateParams = {
+      name: formState.name,
+      email: formState.email,
+      message: formState.message,
+      title: 'Portfolio Contact from INISH OS',
+      time: new Date().toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
+    };
+
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        { publicKey: EMAILJS_PUBLIC_KEY }
+      );
+      setTxStatus('success');
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      setErrorMsg(err?.text || 'Transmission failed. Please try again or email directly.');
+      setTxStatus('error');
+    }
+  };
+
+  const handleReset = () => {
+    setFormState({ name: '', email: '', message: '' });
+    setTxStatus('idle');
+    setErrorMsg('');
   };
 
   return (
@@ -76,255 +162,343 @@ export default function ContactSection() {
       />
 
       <div className="section-inner flex w-full flex-col items-center">
-        {/* Header */}
+
+        {/* ── Heading ── */}
         <motion.div
-          className="mb-12 w-full text-center lg:mb-16"
+          className="mb-16 w-full text-center lg:mb-20"
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7 }}
         >
           <p className="section-label mb-4">COMM.HUB.CONNECT</p>
           <h2 className="section-header gradient-text">Communication Hub</h2>
-          <p className="mt-3 font-ui text-sm text-white/60 sm:text-base">Establish contact with the command vessel.</p>
+          <p className="mt-3 font-ui text-base text-white/60">Establish contact with the command vessel.</p>
           <div className="section-sep mt-4" />
         </motion.div>
 
-        {/* Nebula transmission banner */}
+        {/* ── Nebula banner ── */}
         <motion.div
-          className="mb-10 flex w-full max-w-2xl flex-col items-start gap-4 rounded-xl glass-card-purple p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5"
+          className="mb-14 flex w-full max-w-2xl flex-col items-start gap-4 rounded-xl glass-card-purple p-5 sm:flex-row sm:items-center sm:gap-5"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={inView ? { opacity: 1, scale: 1 } : {}}
           transition={{ delay: 0.3 }}
         >
-          <div className="relative h-10 w-10 flex-shrink-0 sm:h-12 sm:w-12">
+          <div className="relative h-12 w-12 flex-shrink-0">
             <div className="absolute inset-0 rounded-full border border-cyan-400/60 animate-spin-slow" />
             <div className="absolute inset-2 rounded-full" style={{ background: 'radial-gradient(circle, #00D4FF, #5A189A)' }} />
           </div>
           <div className="min-w-0 flex-1">
             <p className="mb-1 font-hud text-[9px] font-medium tracking-widest text-cyan-400">NEBULA TRANSMISSION</p>
-            <p className="font-ui text-sm italic text-white/85 sm:text-base">
+            <p className="font-ui text-base italic text-white/85">
               "Communication channels established. Ready to receive."
             </p>
           </div>
-          <Radio size={16} className="flex-shrink-0 text-cyan-400 animate-pulse sm:size-[18px]" />
+          <Radio size={18} className="flex-shrink-0 text-cyan-400 animate-pulse" />
         </motion.div>
 
-        {/* Main grid */}
-        <div className="grid w-full items-start gap-8 lg:grid-cols-2 lg:gap-12">
+        {/* ── Two-column grid ── */}
+        <div className="grid w-full items-start gap-10 lg:grid-cols-2 lg:gap-14">
 
-          {/* Left: Channels */}
+          {/* ── Left: channels ── */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: 0.4 }}
           >
-            <p className="section-label mb-5 sm:mb-6">COMM CHANNELS</p>
+            <p className="section-label mb-6 sm:mb-8">COMM CHANNELS</p>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {CONTACTS.map((contact, index) => (
                 <motion.a
                   key={contact.label}
                   href={contact.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex items-center gap-3 rounded-xl glass-card p-4 transition-all duration-300 sm:gap-5 sm:p-5"
+                  className="group flex items-start gap-4 rounded-xl glass-card p-5 transition-all duration-300 sm:items-center sm:gap-5 sm:p-6"
                   style={{ borderColor: 'rgba(0,212,255,0.15)' }}
-                  whileHover={{
-                    borderColor: `${contact.color}60`,
-                    boxShadow: `0 0 30px ${contact.color}20`,
-                    x: 4,
-                  }}
+                  whileHover={{ borderColor: `${contact.color}60`, boxShadow: `0 0 30px ${contact.color}20`, x: 6 }}
                   initial={{ opacity: 0, x: -30 }}
                   animate={inView ? { opacity: 1, x: 0 } : {}}
                   transition={{ delay: 0.5 + index * 0.1 }}
                 >
                   <div
-                    className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
+                    className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl"
                     style={{ background: `${contact.color}15`, border: `1px solid ${contact.color}30` }}
                   >
-                    <contact.icon size={20} style={{ color: contact.color }} />
+                    <contact.icon size={22} style={{ color: contact.color }} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <SignalPing color={contact.color} />
-                      <span className="font-hud text-[8px] font-medium tracking-widest sm:text-[9px]" style={{ color: contact.color }}>
+                      <span className="font-hud text-[9px] font-medium tracking-widest" style={{ color: contact.color }}>
                         {contact.label}
                       </span>
                     </div>
-                    <p className="truncate font-ui text-sm font-medium text-white transition-colors group-hover:text-cyan-300 sm:text-base sm:truncate-none">
+                    <p className="break-all font-ui text-base font-medium text-white transition-colors group-hover:text-cyan-300 sm:break-normal">
                       {contact.value}
                     </p>
-                    <p className="mt-0.5 font-ui text-xs text-white/50 sm:text-sm">{contact.desc}</p>
+                    <p className="mt-1 font-ui text-sm text-white/50">{contact.desc}</p>
                   </div>
-                  <div className="pt-0 text-white/20 transition-colors group-hover:text-cyan-400 flex-shrink-0">
-                    <Zap size={16} />
+                  <div className="pt-1 text-white/20 transition-colors group-hover:text-cyan-400 sm:pt-0">
+                    <Zap size={18} />
                   </div>
                 </motion.a>
               ))}
             </div>
 
+            {/* Status pill */}
             <motion.div
-              className="mt-6 rounded-xl glass-card p-4 sm:p-5"
+              className="mt-8 rounded-xl glass-card p-5"
               initial={{ opacity: 0 }}
               animate={inView ? { opacity: 1 } : {}}
               transition={{ delay: 0.9 }}
             >
-              <div className="mb-2 flex items-center gap-3">
+              <div className="mb-3 flex items-center gap-3">
                 <div className="h-2.5 w-2.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="font-hud text-[9px] sm:text-[10px] font-medium tracking-widest text-green-400">
+                <span className="font-hud text-[10px] font-medium tracking-widest text-green-400">
                   ALL CHANNELS OPEN
                 </span>
               </div>
-              <p className="font-ui text-xs leading-relaxed text-white/60 sm:text-sm">
+              <p className="font-ui text-sm leading-relaxed text-white/60">
                 Available for internship opportunities, project collaborations, and networking. Response time: within 24 hours.
               </p>
             </motion.div>
           </motion.div>
 
-          {/* Right: Form */}
+          {/* ── Right: form ── */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: 0.5 }}
           >
-            <p className="section-label mb-5 sm:mb-6">DIRECT TRANSMISSION</p>
+            <p className="section-label mb-6 sm:mb-8">DIRECT TRANSMISSION</p>
 
-            <div className="rounded-xl glass-card p-4 hud-border sm:p-6">
-              {/* Terminal header */}
-              <div className="mb-5 flex items-center gap-2 border-b border-white/5 pb-4">
+            <div className="rounded-xl glass-card p-5 hud-border sm:p-7">
+
+              {/* Terminal chrome bar */}
+              <div className="mb-7 flex items-center gap-2 border-b border-white/5 pb-5">
                 <div className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
                 <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
                 <div className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
-                <span className="ml-2 font-hud text-[8px] sm:text-[9px] font-medium tracking-widest text-white/40">
-                  COMM.TERMINAL v1.0
+                <span className="ml-3 font-hud text-[9px] font-medium tracking-widest text-white/40">
+                  COMM.TERMINAL v2.0
                 </span>
+                {/* Live status badge */}
+                <div className="ml-auto flex items-center gap-1.5">
+                  <div className={`h-2 w-2 rounded-full ${txStatus === 'sending' ? 'bg-yellow-400 animate-pulse' :
+                    txStatus === 'success' ? 'bg-green-400' :
+                      txStatus === 'error' ? 'bg-red-400' :
+                        'bg-cyan-400/50'
+                    }`} />
+                  <span className="font-hud text-[8px] tracking-widest text-white/30">
+                    {txStatus === 'sending' ? 'TRANSMITTING' :
+                      txStatus === 'success' ? 'SENT' :
+                        txStatus === 'error' ? 'FAULT' :
+                          'STANDBY'}
+                  </span>
+                </div>
               </div>
 
               <AnimatePresence mode="wait">
-                {!sent ? (
+
+                {/* ── FORM STATE (idle + error) ── */}
+                {(txStatus === 'idle' || txStatus === 'error') && (
                   <motion.form
                     key="form"
                     onSubmit={handleSubmit}
-                    className="space-y-4 sm:space-y-5"
-                    initial={{ opacity: 1 }}
+                    className="space-y-5"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
+                    {/* Error banner */}
+                    {txStatus === 'error' && (
+                      <motion.div
+                        className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3"
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <p className="font-hud text-[9px] tracking-widest text-red-400">
+                          ⚠ TRANSMISSION FAULT
+                        </p>
+                        <p className="mt-1 font-ui text-xs text-white/60">{errorMsg}</p>
+                      </motion.div>
+                    )}
+
+                    {/* Name */}
                     <div>
-                      <label className="mb-2 block font-hud text-[9px] sm:text-[10px] font-medium tracking-widest text-cyan-400/80">
+                      <label className="mb-2 flex items-center justify-between font-hud text-[10px] font-medium tracking-widest text-cyan-400/80">
                         SENDER CALLSIGN
+                        <span className="normal-case tracking-normal text-white/30">required</span>
                       </label>
                       <input
                         className="input-hud"
                         placeholder="Your Name"
+                        name="name"
                         value={formState.name}
-                        onChange={(e) => setFormState((v) => ({ ...v, name: e.target.value }))}
+                        onChange={handleChange}
+                        disabled={isLocked}
                         required
+                        minLength={2}
                       />
                     </div>
 
+                    {/* Email */}
                     <div>
-                      <label className="mb-2 block font-hud text-[9px] sm:text-[10px] font-medium tracking-widest text-cyan-400/80">
+                      <label className="mb-2 flex items-center justify-between font-hud text-[10px] font-medium tracking-widest text-cyan-400/80">
                         RETURN FREQUENCY
+                        <span className="normal-case tracking-normal text-white/30">required</span>
                       </label>
                       <input
                         type="email"
                         className="input-hud"
                         placeholder="your@email.com"
+                        name="email"
                         value={formState.email}
-                        onChange={(e) => setFormState((v) => ({ ...v, email: e.target.value }))}
+                        onChange={handleChange}
+                        disabled={isLocked}
                         required
                       />
                     </div>
 
+                    {/* Message */}
                     <div>
-                      <label className="mb-2 block font-hud text-[9px] sm:text-[10px] font-medium tracking-widest text-cyan-400/80">
+                      <label className="mb-2 flex items-center justify-between font-hud text-[10px] font-medium tracking-widest text-cyan-400/80">
                         TRANSMISSION DATA
+                        <CharCounter value={formState.message.length} max={MAX_MESSAGE} />
                       </label>
                       <textarea
-                        className="input-hud h-28 resize-none sm:h-32"
+                        className="input-hud h-32 resize-none"
                         placeholder="Your message..."
+                        name="message"
                         value={formState.message}
-                        onChange={(e) => setFormState((v) => ({ ...v, message: e.target.value }))}
+                        onChange={handleChange}
+                        disabled={isLocked}
                         required
+                        minLength={10}
                       />
                     </div>
 
+                    {/* Submit */}
                     <motion.button
                       type="submit"
-                      className="btn-primary flex w-full items-center justify-center gap-2 text-sm"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      disabled={sending}
+                      className="btn-primary flex w-full items-center justify-center gap-2 text-base disabled:cursor-not-allowed disabled:opacity-60"
+                      whileHover={!isLocked ? { scale: 1.02 } : {}}
+                      whileTap={!isLocked ? { scale: 0.98 } : {}}
+                      disabled={isLocked}
                     >
-                      {sending ? (
-                        <>
-                          <div className="h-3 w-3 rounded-full border border-cyan-400 border-t-transparent animate-spin" />
-                          TRANSMITTING...
-                        </>
-                      ) : (
-                        <>
-                          <Send size={15} />
-                          TRANSMIT MESSAGE
-                        </>
-                      )}
+                      <Send size={16} />
+                      {txStatus === 'error' ? 'RETRY TRANSMISSION' : 'TRANSMIT MESSAGE'}
                     </motion.button>
                   </motion.form>
-                ) : (
+                )}
+
+                {/* ── SENDING STATE ── */}
+                {txStatus === 'sending' && (
+                  <motion.div
+                    key="sending"
+                    className="flex flex-col items-center gap-5 py-12"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <div className="relative h-20 w-20">
+                      {[0, 1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute inset-0 rounded-full border border-cyan-400/60"
+                          animate={{ scale: [1, 1.8 + i * 0.4], opacity: [0.6, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.4, ease: 'easeOut' }}
+                        />
+                      ))}
+                      <div
+                        className="absolute inset-3 rounded-full"
+                        style={{ background: 'radial-gradient(circle, #00D4FF, #5A189A)' }}
+                      />
+                    </div>
+                    <p className="font-hud text-sm tracking-widest text-cyan-400 animate-pulse">
+                      TRANSMITTING...
+                    </p>
+                    <p className="font-ui text-xs text-white/40">Routing signal through NEBULA relay</p>
+                  </motion.div>
+                )}
+
+                {/* ── SUCCESS STATE ── */}
+                {txStatus === 'success' && (
                   <motion.div
                     key="success"
                     className="py-10 text-center"
-                    initial={{ opacity: 0, scale: 0.8 }}
+                    initial={{ opacity: 0, scale: 0.85 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: 'spring', stiffness: 120 }}
                   >
-                    <div
-                      className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full sm:h-16 sm:w-16"
+                    <motion.div
+                      className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full"
                       style={{
                         background: 'rgba(0,212,255,0.1)',
                         border: '1px solid rgba(0,212,255,0.4)',
-                        boxShadow: '0 0 30px rgba(0,212,255,0.3)',
                       }}
+                      animate={{
+                        boxShadow: [
+                          '0 0 20px rgba(0,212,255,0.3)',
+                          '0 0 50px rgba(0,212,255,0.6)',
+                          '0 0 20px rgba(0,212,255,0.3)',
+                        ],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <Send size={22} className="text-cyan-400" />
-                    </div>
-                    <p className="mb-2 font-hud text-base font-bold text-white sm:text-lg">TRANSMISSION SENT</p>
-                    <p className="font-ui text-xs text-white/60 sm:text-sm">
-                      Message received by NEBULA. K Inish will respond within 24 hours.
+                      <Send size={28} className="text-cyan-400" />
+                    </motion.div>
+
+                    <p className="mb-2 font-hud text-lg font-bold text-white">TRANSMISSION SENT</p>
+                    <p className="mb-1 font-ui text-sm text-white/60">
+                      Signal confirmed. K Inish will respond within 24 hours.
                     </p>
-                    <button onClick={() => setSent(false)} className="btn-primary mt-5 text-[9px]">
-                      NEW TRANSMISSION
-                    </button>
+                    <p className="font-hud text-[9px] tracking-widest text-cyan-400/50">
+                      NEBULA RELAY CONFIRMED ◆ SIGNAL LOGGED
+                    </p>
+
+                    <motion.button
+                      onClick={handleReset}
+                      className="btn-primary mt-7 text-[10px]"
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      ◉ NEW TRANSMISSION
+                    </motion.button>
                   </motion.div>
                 )}
+
               </AnimatePresence>
             </div>
           </motion.div>
         </div>
 
-        {/* Footer */}
+        {/* ── Footer ── */}
         <motion.div
-          className="mt-16 w-full max-w-3xl border-t border-white/5 pt-8 text-center sm:mt-20"
+          className="mt-20 w-full max-w-3xl border-t border-white/5 pt-8 text-center sm:mt-24"
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 1 }}
         >
           <div className="mb-4 flex items-center justify-center gap-3">
-            <div className="h-px w-12 bg-gradient-to-r from-transparent to-cyan-400/40 sm:w-20" />
-            <div className="relative h-7 w-7 sm:h-8 sm:w-8">
+            <div className="h-px w-20 bg-gradient-to-r from-transparent to-cyan-400/40" />
+            <div className="relative h-8 w-8">
               <div className="absolute inset-0 rounded-full border border-cyan-400/40 animate-spin-slow" />
               <div className="absolute inset-1 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-400">
-                <span className="font-hud text-[7px] font-bold text-white">IO</span>
+                <span className="font-hud text-[8px] font-bold text-white">IO</span>
               </div>
             </div>
-            <div className="h-px w-12 bg-gradient-to-l from-transparent to-cyan-400/40 sm:w-20" />
+            <div className="h-px w-20 bg-gradient-to-l from-transparent to-cyan-400/40" />
           </div>
-          <p className="font-hud text-[7px] tracking-[0.3em] text-white/30 sm:text-[8px] sm:tracking-[0.4em]">
+          <p className="font-hud text-[8px] tracking-[0.4em] text-white/30">
             INISH OS // NEBULA COMMAND VESSEL // K INISH KUMAR 2026
           </p>
-          <p className="mt-2 font-ui text-[10px] text-white/20 sm:text-xs">
+          <p className="mt-2 font-ui text-xs text-white/20">
             Built with React, Three.js, Framer Motion and creativity
           </p>
         </motion.div>
+
       </div>
     </section>
   );

@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { AppProvider } from './contexts/AppContext';
 import { useApp } from './contexts/useApp';
 import NavHUD from './components/NavHUD';
 import NebulaAssistant from './components/NebulaAssistant';
 import StarField from './components/StarField';
+import SoftAurora from './components/SoftAurora';
 import AboutSection from './sections/AboutSection';
 import SkillsSection from './sections/SkillsSection';
 import ProjectsSection from './sections/ProjectsSection';
@@ -98,7 +99,17 @@ function ScrollTracker() {
 }
 
 function MainContent() {
-  const { booted } = useApp();
+  const { booted, lowPowerMode } = useApp();
+  const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1280 : false);
+
+  useEffect(() => {
+    if (!booted) return;
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1280);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [booted]);
 
   return (
     <>
@@ -117,8 +128,18 @@ function MainContent() {
             className="relative"
           >
             {/* Background elements */}
+            {/* Layer 1: Stars */}
             <StarField />
-            <div className="scanline" />
+
+            {/* Layer 2: Aurora — desktop only, screen blend, non-interactive wrapper */}
+            {isDesktop && !lowPowerMode && (
+              <div style={{ position: 'fixed', inset: 0, zIndex: 1, mixBlendMode: 'screen', opacity: 0.55, pointerEvents: 'none' }}>
+                <SoftAurora />
+              </div>
+            )}
+
+            {/* Layer 3: Scanline */}
+            <div className="scanline" style={{ zIndex: 2 }} />
 
             {/* UI */}
             <CustomCursor />

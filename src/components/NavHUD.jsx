@@ -188,7 +188,7 @@ const CSS = `
 `;
 
 export default function NavHUD() {
-  const { activeSection, setActiveSection } = useApp();
+  const { activeSection, setActiveSection, lowPowerMode, toggleLowPower } = useApp();
   const timeRef    = useRef(null);
   const dateRef    = useRef(null);
   const navRef     = useRef(null);
@@ -322,6 +322,31 @@ export default function NavHUD() {
 
           {/* ── Right status cluster ── */}
           <div className="nhud-status-cluster">
+            {/* Low Power Mode Toggle */}
+            <button 
+              onClick={toggleLowPower}
+              style={{
+                background: 'transparent',
+                border: lowPowerMode ? '1px solid rgba(255, 79, 216, 0.4)' : '1px solid rgba(0, 255, 255, 0.4)',
+                borderRadius: '8px',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                fontFamily: 'Orbitron, monospace',
+                fontSize: '8px',
+                letterSpacing: '0.1em',
+                color: lowPowerMode ? '#FF4FD8' : '#00D4FF',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                textTransform: 'uppercase',
+                transition: 'all 0.2s',
+                boxShadow: lowPowerMode ? '0 0 8px rgba(255, 79, 216, 0.2)' : '0 0 8px rgba(0, 255, 255, 0.2)'
+              }}
+              title="Toggle Low Power Mode (disables background animations)"
+            >
+              {lowPowerMode ? '⚡ PWR: LOW' : '🚀 PWR: MAX'}
+            </button>
+
             {/* SYS ONLINE pill — hidden on xs */}
             <div className="nhud-sys-pill" style={{ alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 999, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)' }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#4ade80', animation: 'pulse 2s infinite', boxShadow: '0 0 6px #4ade80' }} />

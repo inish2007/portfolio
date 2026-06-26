@@ -282,8 +282,10 @@ export default function GalaxySection() {
                 />
 
                 {/* INTERACTIVE ROTATING BODY */}
-                <motion.div
-                  className="w-full h-full rounded-full cursor-pointer border relative flex items-center justify-center"
+                <motion.button
+                  type="button"
+                  aria-label={`Inspect milestone: ${planet.label} - ${planet.name}`}
+                  className="w-full h-full rounded-full cursor-pointer border relative flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                   style={{
                     background: `radial-gradient(circle at 30% 30%, ${planet.color}e8 0%, ${planet.color}60 45%, #03030a 90%)`,
                     borderColor: isCurrentlyActive ? '#ffffff' : `${planet.color}cc`,
@@ -302,7 +304,7 @@ export default function GalaxySection() {
                   >
                     {String(planet.id).padStart(2, '0')}
                   </motion.span>
-                </motion.div>
+                </motion.button>
 
                 {/* STATIC TIMELINE HUD LABELS */}
                 <div

@@ -1,7 +1,12 @@
 import { useEffect, useRef } from 'react';
+import { useApp } from '../contexts/useApp';
 
 export default function StarField() {
+  const { lowPowerMode } = useApp();
   const canvasRef = useRef(null);
+  const starsRef = useRef(null);
+  const nebulaeRef = useRef(null);
+  const dustRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -37,30 +42,33 @@ export default function StarField() {
     const STAR_COUNT = W < 768 ? 700 : 1400;
     const COLORS = ['#ffffff', '#ffffff', '#ffffff', '#b8d4ff', '#ffd6a5', '#c8e8ff'];
 
-    const stars = Array.from({ length: STAR_COUNT }, () => {
-      const z = Math.random() * 0.85 + 0.15;
-      const isGiant = Math.random() > 0.985;
-      const isMid = !isGiant && Math.random() > 0.92;
-      return {
-        x: Math.random() * W,
-        y: Math.random() * H,
-        z,
-        r: isGiant
-          ? Math.random() * 1.2 + 1.6
-          : isMid
-            ? Math.random() * 0.5 + 0.7
-            : Math.random() * 0.35 + 0.15,
-        isGiant,
-        isMid,
-        alpha: Math.random() * 0.45 + 0.55,
-        twinkle: Math.random() * Math.PI * 2,
-        twinkleSpeed: Math.random() * 0.018 + 0.004,
-        pulse: Math.random() * Math.PI * 2,
-        pulseSpeed: Math.random() * 0.008 + 0.002,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        mouseP: z * 12,
-      };
-    });
+    if (!starsRef.current) {
+      starsRef.current = Array.from({ length: STAR_COUNT }, () => {
+        const z = Math.random() * 0.85 + 0.15;
+        const isGiant = Math.random() > 0.985;
+        const isMid = !isGiant && Math.random() > 0.92;
+        return {
+          x: Math.random() * W,
+          y: Math.random() * H,
+          z,
+          r: isGiant
+            ? Math.random() * 1.2 + 1.6
+            : isMid
+              ? Math.random() * 0.5 + 0.7
+              : Math.random() * 0.35 + 0.15,
+          isGiant,
+          isMid,
+          alpha: Math.random() * 0.45 + 0.55,
+          twinkle: Math.random() * Math.PI * 2,
+          twinkleSpeed: Math.random() * 0.018 + 0.004,
+          pulse: Math.random() * Math.PI * 2,
+          pulseSpeed: Math.random() * 0.008 + 0.002,
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          mouseP: z * 12,
+        };
+      });
+    }
+    const stars = starsRef.current;
 
     // ─── DUST LANES (dark ISM extinction bands) ────────────────────────────────
     const dustLanes = [
@@ -71,12 +79,15 @@ export default function StarField() {
 
     // ─── SPACE DUST PARTICLES ─────────────────────────────────────────────────
     const DUST_COUNT = W < 768 ? 180 : 400;
-    const dust = Array.from({ length: DUST_COUNT }, () => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      alpha: Math.random() * 0.12 + 0.03,
-      z: Math.random() * 0.12 + 0.03,
-    }));
+    if (!dustRef.current) {
+      dustRef.current = Array.from({ length: DUST_COUNT }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        alpha: Math.random() * 0.12 + 0.03,
+        z: Math.random() * 0.12 + 0.03,
+      }));
+    }
+    const dust = dustRef.current;
 
     // ─── NEBULAE ──────────────────────────────────────────────────────────────
     // Hero safe zone: avoid center 40% width × 35% height
@@ -108,18 +119,21 @@ export default function StarField() {
       '60, 0, 100',     // dark purple
     ];
 
-    const nebulae = Array.from({ length: 7 }, (_, i) => ({
-      x: randSafeX(),
-      y: randSafeY(),
-      baseR: Math.random() * 200 + 140,
-      phase: Math.random() * Math.PI * 2,
-      phaseSpeed: Math.random() * 0.001 + 0.0003,
-      color: nebulaPalette[i % nebulaPalette.length],
-      alpha: Math.random() * 0.025 + 0.012,
-      driftX: (Math.random() - 0.5) * 0.025,
-      driftY: (Math.random() - 0.5) * 0.025,
-      mouseP: Math.random() * 6 + 2,
-    }));
+    if (!nebulaeRef.current) {
+      nebulaeRef.current = Array.from({ length: 7 }, (_, i) => ({
+        x: randSafeX(),
+        y: randSafeY(),
+        baseR: Math.random() * 200 + 140,
+        phase: Math.random() * Math.PI * 2,
+        phaseSpeed: Math.random() * 0.001 + 0.0003,
+        color: nebulaPalette[i % nebulaPalette.length],
+        alpha: Math.random() * 0.025 + 0.012,
+        driftX: (Math.random() - 0.5) * 0.025,
+        driftY: (Math.random() - 0.5) * 0.025,
+        mouseP: Math.random() * 6 + 2,
+      }));
+    }
+    const nebulae = nebulaeRef.current;
 
     // ─── GALAXIES ─────────────────────────────────────────────────────────────
     const galaxies = [
@@ -177,6 +191,45 @@ export default function StarField() {
 
     // ─── DRAW ─────────────────────────────────────────────────────────────────
     const draw = (ts) => {
+      if (lowPowerMode) {
+        // Draw a single frame with a beautiful static background and return
+        ctx.fillStyle = '#04060f';
+        ctx.fillRect(0, 0, W, H);
+
+        // Add static gradient glows for galaxies
+        galaxies.forEach(g => {
+          const px = g.rx * W;
+          const py = g.ry * H;
+          const grad = ctx.createRadialGradient(px, py, 0, px, py, g.r);
+          grad.addColorStop(0, 'rgba(255,255,255,0.03)');
+          grad.addColorStop(0.2, `rgba(${g.color},0.015)`);
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(px, py, g.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Add static nebulae
+        nebulae.forEach(n => {
+          const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.baseR);
+          grad.addColorStop(0, `rgba(${n.color},${n.alpha * 0.4})`);
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.baseR, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Add static stars
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        stars.slice(0, 300).forEach(s => {
+          ctx.fillRect(s.x, s.y, s.r > 1 ? 1.5 : 1, s.r > 1 ? 1.5 : 1);
+        });
+
+        return; // Stops requesting new frames
+      }
+
       ctx.fillStyle = '#04060f';
       ctx.fillRect(0, 0, W, H);
 
@@ -407,7 +460,7 @@ export default function StarField() {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouse);
     };
-  }, []);
+  }, [lowPowerMode]);
 
   return (
     <canvas
