@@ -12,17 +12,18 @@ export default function StarField() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let animId;
+    let animId = null;
+    let isRunning = !document.hidden;
     let mouse = { x: 0, y: 0 };
 
     let W = window.innerWidth;
     let H = window.innerHeight;
-    let dpr = window.devicePixelRatio || 1;
+    let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
 
     const resize = () => {
       W = window.innerWidth;
       H = window.innerHeight;
-      dpr = window.devicePixelRatio || 1;
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = W * dpr;
       canvas.height = H * dpr;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -191,6 +192,8 @@ export default function StarField() {
 
     // ─── DRAW ─────────────────────────────────────────────────────────────────
     const draw = (ts) => {
+      animId = null;
+      if (!isRunning) return;
       if (lowPowerMode) {
         // Draw a single frame with a beautiful static background and return
         ctx.fillStyle = '#04060f';
@@ -453,12 +456,24 @@ export default function StarField() {
       animId = requestAnimationFrame(draw);
     };
 
-    animId = requestAnimationFrame(draw);
+    const onVisibilityChange = () => {
+      isRunning = !document.hidden;
+      if (!isRunning && animId !== null) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      } else if (isRunning && animId === null) {
+        animId = requestAnimationFrame(draw);
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    if (isRunning) animId = requestAnimationFrame(draw);
 
     return () => {
-      cancelAnimationFrame(animId);
+      if (animId !== null) cancelAnimationFrame(animId);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouse);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [lowPowerMode]);
 

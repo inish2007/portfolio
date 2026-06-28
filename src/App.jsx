@@ -5,20 +5,48 @@ import NavHUD from './components/NavHUD';
 import NebulaAssistant from './components/NebulaAssistant';
 import StarField from './components/StarField';
 import SoftAurora from './components/SoftAurora';
+import Particles from './components/Particles';
 import AboutSection from './sections/AboutSection';
 import SkillsSection from './sections/SkillsSection';
 import ProjectsSection from './sections/ProjectsSection';
 import AchievementsSection from './sections/AchievementsSection';
 import ContactSection from './sections/ContactSection';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-const HeroSection = lazy(() => import('./sections/HeroSection'));
+const loadHeroSection = () => import('./sections/HeroSection');
+const HeroSection = lazy(loadHeroSection);
 const GalaxySection = lazy(() => import('./sections/GalaxySection'));
 const BootSequence = lazy(() => import('./components/BootSequence'));
 
 const SECTION_IDS = ['hero', 'about', 'skills', 'projects', 'galaxy', 'achievements', 'contact'];
 
-// Custom cursor component
+function WarpExitFlash({ lowPowerMode }) {
+  return (
+    <motion.div
+      className="warp-exit-flash"
+      aria-hidden="true"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 0 }}
+      transition={{ duration: lowPowerMode ? 0.4 : 0.75, ease: 'easeOut' }}
+    >
+      <motion.div
+        className="warp-exit-core"
+        initial={{ opacity: 0.95, scale: 0.12 }}
+        animate={{ opacity: 0, scale: lowPowerMode ? 1.8 : 4.5 }}
+        transition={{ duration: lowPowerMode ? 0.35 : 0.68, ease: [0.16, 1, 0.3, 1] }}
+      />
+      {!lowPowerMode && (
+        <motion.div
+          className="warp-exit-shockwave"
+          initial={{ opacity: 0.85, scale: 0.08 }}
+          animate={{ opacity: 0, scale: 1.35 }}
+          transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        />
+      )}
+    </motion.div>
+  );
+}
+
 function CustomCursor() {
   const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
   const dotRef = useRef(null);
@@ -70,7 +98,6 @@ function CustomCursor() {
   );
 }
 
-// Scroll tracker
 function ScrollTracker() {
   const { setActiveSection } = useApp();
 
@@ -83,9 +110,9 @@ function ScrollTracker() {
           }
         });
       },
-      { 
+      {
         rootMargin: '-85px 0px -75% 0px',
-        threshold: 0.15 
+        threshold: 0.15,
       }
     );
     SECTION_IDS.forEach(id => {
@@ -100,15 +127,24 @@ function ScrollTracker() {
 
 function MainContent() {
   const { booted, lowPowerMode } = useApp();
-  const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1280 : false);
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== 'undefined' ? window.innerWidth >= 1280 : false
+  );
+
+  useEffect(() => {
+    if (booted) return undefined;
+    const preloadTimer = window.setTimeout(() => {
+      loadHeroSection();
+    }, 1200);
+    return () => window.clearTimeout(preloadTimer);
+  }, [booted]);
 
   useEffect(() => {
     if (!booted) return;
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1280);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const desktopQuery = window.matchMedia('(min-width: 1280px)');
+    const handleBreakpoint = (event) => setIsDesktop(event.matches);
+    desktopQuery.addEventListener('change', handleBreakpoint);
+    return () => desktopQuery.removeEventListener('change', handleBreakpoint);
   }, [booted]);
 
   return (
@@ -119,27 +155,64 @@ function MainContent() {
         </Suspense>
       )}
 
-      <AnimatePresence>
+      {booted && <WarpExitFlash lowPowerMode={lowPowerMode} />}
+
+      <>
         {booted && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-            className="relative"
-          >
-            {/* Background elements */}
-            {/* Layer 1: Stars */}
+          <div className="main-page-shell relative">
+            {/* ── Background layers (bottom → top) ── */}
+
+            {/* Layer 0: OGL Particles — deepest layer, slow drifting nebula dust */}
+            {!lowPowerMode && (
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 0,
+                  pointerEvents: 'none',
+                }}
+              >
+                <Particles
+                  particleCount={isDesktop ? 120 : 60}
+                  particleSpread={12}
+                  speed={0.04}
+                  particleColors={['#00D4FF', '#5A189A', '#FF4FD8', '#a78bfa']}
+                  moveParticlesOnHover={false}
+                  alphaParticles={true}
+                  particleBaseSize={isDesktop ? 60 : 40}
+                  sizeRandomness={1.2}
+                  cameraDistance={22}
+                  disableRotation={false}
+                  pixelRatio={Math.min(
+                    typeof window !== 'undefined' ? window.devicePixelRatio : 1,
+                    1.5
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Layer 1: StarField canvas */}
             <StarField />
 
-            {/* Layer 2: Aurora — desktop only, screen blend, non-interactive wrapper */}
+            {/* Layer 2: Aurora — desktop only, screen blend */}
             {isDesktop && !lowPowerMode && (
-              <div style={{ position: 'fixed', inset: 0, zIndex: 1, mixBlendMode: 'screen', opacity: 0.55, pointerEvents: 'none' }}>
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 1,
+                  mixBlendMode: 'screen',
+                  opacity: 0.55,
+                  pointerEvents: 'none',
+                }}
+              >
                 <SoftAurora />
               </div>
             )}
 
             {/* Layer 3: Scanline */}
             <div className="scanline" style={{ zIndex: 2 }} />
+            <div className="site-color-grade" aria-hidden="true" />
 
             {/* UI */}
             <CustomCursor />
@@ -149,9 +222,16 @@ function MainContent() {
 
             {/* Main content */}
             <main className="relative z-10">
-              <Suspense fallback={null}>
-                <HeroSection />
-              </Suspense>
+              <motion.div
+                className="hero-landing-stage"
+                initial={{ opacity: 0, y: lowPowerMode ? -6 : -18, scale: lowPowerMode ? 1.008 : 1.025 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: lowPowerMode ? 0.55 : 0.95, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Suspense fallback={null}>
+                  <HeroSection />
+                </Suspense>
+              </motion.div>
               <div className="section-sep mx-auto max-w-4xl" />
               <AboutSection />
               <div className="section-sep mx-auto max-w-4xl" />
@@ -167,9 +247,9 @@ function MainContent() {
               <div className="section-sep mx-auto max-w-4xl" />
               <ContactSection />
             </main>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </>
     </>
   );
 }

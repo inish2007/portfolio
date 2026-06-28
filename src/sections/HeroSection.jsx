@@ -416,6 +416,7 @@ export default function HeroSection() {
   const [charIdx, setCharIdx] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState(null);
+  const [heroInView, setHeroInView] = useState(true);
 
   const sectionRef = useRef(null);
   const mouse = useRef({ x: 0, y: 0 });
@@ -424,6 +425,17 @@ export default function HeroSection() {
   const cameraZ = useTransform(scrollYProgress, [0, 1], [4.5, 7]);
   const cameraRotY = useTransform(scrollYProgress, [0, 1], [0, Math.PI / 2.2]);
   const bgParallaxX = useTransform(scrollYProgress, [0, 1], [0, -40]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroInView(entry.isIntersecting),
+      { rootMargin: '180px 0px' }
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   // Typing engine
   useEffect(() => {
@@ -480,7 +492,7 @@ export default function HeroSection() {
             className="order-1 flex w-full flex-col items-center text-center lg:order-none lg:col-span-7 lg:items-start lg:text-left"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.9, delay: 0.2 }}
+            transition={{ duration: 0.9, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             {/* Status badge */}
             <div className="block h-20 lg:hidden" />
@@ -569,7 +581,7 @@ export default function HeroSection() {
             className="relative mx-auto w-full overflow-hidden order-2 lg:order-none lg:col-span-5 lg:max-w-none lg:justify-self-end"
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.5, type: 'spring' }}
+            transition={{ duration: 1, delay: 1, type: 'spring', stiffness: 110, damping: 16 }}
           >
             <div
               className="relative w-full overflow-hidden rounded-2xl border border-cyan-500/20 bg-purple-950/10 backdrop-blur-sm"
@@ -610,6 +622,7 @@ export default function HeroSection() {
                 <Canvas
                   camera={{ position: [0, 0, 4.5], fov: 45 }}
                   dpr={[1, 1.5]}
+                  frameloop={heroInView ? 'always' : 'never'}
                   performance={{ min: 0.5 }}
                   onPointerMissed={() => setSelectedSkill(null)}
                 >
@@ -625,9 +638,7 @@ export default function HeroSection() {
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <p className="font-hud text-[8px] tracking-widest text-purple-300">NEBULA AI</p>
-              <p className="font-hud text-sm font-bold text-white">Online</p>
-              <div className="mt-1.5 h-0.5 w-12 rounded-full" style={{ background: 'linear-gradient(90deg,#5A189A,#00D4FF)' }} />
+              
             </motion.div>
 
             <motion.div
@@ -635,9 +646,7 @@ export default function HeroSection() {
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <p className="font-hud text-[8px] tracking-widest text-cyan-400">SKILL LEVEL</p>
-              <p className="font-hud text-sm font-bold text-white">LV 40+</p>
-              <div className="mt-1.5 h-0.5 w-12 rounded-full" style={{ background: 'linear-gradient(90deg,#00D4FF,#FF4FD8)' }} />
+            
             </motion.div>
           </motion.div>
         </div>
