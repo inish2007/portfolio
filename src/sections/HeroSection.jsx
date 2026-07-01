@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { MeshDistortMaterial, Sphere, Torus, Trail, Sparkles, Html } from '@react-three/drei';
-import { ChevronRight, Download, Eye, Mail } from 'lucide-react';
+import { ChevronRight, Download, FolderGit2, Mail } from 'lucide-react';
 import * as THREE from 'three';
 import { useApp } from '../contexts/useApp';
 
-const HERO_TEXTS = ['Future AI Engineer', 'Full-Stack Developer', 'Problem Solver', 'ML Enthusiast'];
+const HERO_TEXTS = ['AI / ML systems', 'Full-stack web apps', 'Clean, scalable code', 'Problem solving'];
 
 const SKILLS = [
   { name: 'React', color: '#00D4FF', level: 85, radius: 1.7, speed: 0.6, tiltX: Math.PI / 2.1, tiltZ: 0 },
@@ -18,7 +18,7 @@ const LOG_MESSAGES = [
   'Initializing neural weights...',
   'Syncing skill matrix...',
   'Calibrating orbit nodes...',
-  'Loading mission archive...',
+  'Loading project archive...',
   'Connection stable: 100%',
   'Rendering AI core geometry...',
   'Nebula link established.',
@@ -330,7 +330,7 @@ function CountUpMetric({ value, label, delay }) {
       <p className="font-hud text-xl font-bold text-cyan-400 text-glow-blue sm:text-2xl xl:text-3xl tabular-nums">
         {display}
       </p>
-      <p className="mt-1 font-hud text-[8px] font-bold uppercase tracking-widest text-white/50">{label}</p>
+      <p className="mt-1 font-hud text-[8px] font-bold uppercase tracking-widest text-white/55">{label}</p>
     </div>
   );
 }
@@ -476,7 +476,7 @@ export default function HeroSection() {
       className="relative flex min-h-screen w-full items-start justify-center overflow-hidden px-4 pb-20 pt-48 sm:pt-40 md:pt-36 lg:items-center lg:px-16 lg:pt-32"
       style={{ scrollMarginTop: '90px' }}
 >
-  
+
       {/* Background */}
       <motion.div className="absolute inset-0 z-[1] grid-overlay opacity-20" style={{ x: bgParallaxX }} />
       <div
@@ -494,46 +494,59 @@ export default function HeroSection() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.9, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Status badge */}
+            {/* Status badge — recruiter-clear role tag */}
             <div className="block h-20 lg:hidden" />
-            <div className="mb-4 inline-flex items-center gap-3 border border-cyan-400/30 glass-card px-4 py-2 sm:mb-8">
+            <div className="mb-5 inline-flex items-center gap-3 border border-cyan-400/30 glass-card px-4 py-2 sm:mb-8">
               <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="font-hud text-[8px] tracking-[0.3em] text-cyan-400 sm:text-[10px] sm:tracking-[0.4em]">
-                COMMAND BRIDGE // INISH OS v2.6
+              <span className="font-hud text-[8px] tracking-[0.25em] text-cyan-400 sm:text-[10px] sm:tracking-[0.3em]">
+                AI / ML ENGINEER &middot; OPEN TO OPPORTUNITIES
               </span>
             </div>
 
             {/* Name */}
-            <h1 className="mb-3 font-hud font-black leading-tight tracking-tight"
+            <h1 className="mb-2 font-hud font-black leading-[1.05] tracking-tight"
                 style={{ fontSize: 'clamp(2.2rem, 10vw, 5rem)' }}>
               <span className="block text-white/90">K INISH</span>
               <span className="block gradient-text-shimmer">KUMAR</span>
             </h1>
 
-            <p className="mb-3 font-hud text-base font-bold tracking-wider text-purple-300 sm:text-xl lg:text-2xl">
-              B.Tech CSE (AI &amp; ML)
+            {/* Role subhead — immediate identity + specialization */}
+            <p className="mb-1 font-hud text-base font-bold tracking-wide text-purple-300 sm:text-xl lg:text-2xl">
+              B.Tech CSE &middot; AI &amp; Machine Learning
+            </p>
+            <p className="mb-5 font-ui text-sm font-medium tracking-wide text-cyan-300/80 sm:mb-6 sm:text-base">
+              Building AI systems and modern web experiences
             </p>
 
-            {/* Typing text */}
-            <div className="mb-6 flex min-h-[2rem] items-center justify-center gap-2 lg:justify-start">
-              <span className="font-hud text-lg font-bold text-cyan-400 sm:text-xl text-glow-blue">
-                {typedText}
-              </span>
-              <span className="font-hud text-lg text-cyan-400 animate-pulse sm:text-xl text-glow-blue">|</span>
+            {/* Typing text — labeled so it reads as "currently building," not decoration */}
+            <div className="mb-6 flex min-h-[2.4rem] flex-col items-center gap-1 lg:items-start">
+              <span className="font-hud text-[8px] tracking-[0.25em] text-white/35">CURRENT FOCUS</span>
+              <div className="flex items-center gap-2">
+                <span className="font-hud text-lg font-bold text-cyan-400 sm:text-xl text-glow-blue">
+                  {typedText}
+                </span>
+                <span className="font-hud text-lg text-cyan-400 animate-pulse sm:text-xl text-glow-blue">|</span>
+              </div>
             </div>
 
-            <p className="mx-auto mb-8 max-w-xl border-t-2 border-purple-500/40 pt-5 font-ui text-sm leading-relaxed text-white/75 sm:text-base lg:mx-0 xl:max-w-2xl">
-              "Building intelligent systems, modern web experiences, and the foundation for future AI technologies."
+            <p
+            className="mx-auto mb-8 max-w-xl border-t-2 border-purple-500/40 pt-5 font-ui text-sm leading-relaxed text-white/85
+            [text-shadow:0_0_8px_rgba(168,85,247,0.35)]
+            sm:text-base lg:mx-0 xl:max-w-2xl"
+            >
+            I'm an AI/ML student who builds production-style web apps and intelligent
+            systems end to end &mdash; from data and models to polished, deployed interfaces.
+            Looking for internship and entry-level opportunities where I can ship real work.
             </p>
 
-            {/* Action buttons — 2 cols on mobile, 4 on sm+ */}
+            {/* Action buttons — recruiter-friendly labels, 2 cols on mobile, 4 on sm+ */}
             <div className="mb-10 grid w-full max-w-xs grid-cols-2 gap-3 sm:max-w-lg lg:max-w-none lg:grid-cols-4">
               <MagneticButton
-                onClick={() => { scrollTo('projects'); triggerNebula('Mission Archive is now open, Commander.'); }}
+                onClick={() => { scrollTo('projects'); triggerNebula('Opening project archive, Commander.'); }}
                 className="btn-primary col-span-1 flex h-14 w-full items-center justify-center gap-1.5 px-4 text-sm"
               >
-                <Eye size={13} />
-                Missions
+                <FolderGit2 size={13} />
+                Projects
               </MagneticButton>
 
               <MagneticButton
@@ -541,7 +554,7 @@ export default function HeroSection() {
                 className="btn-secondary col-span-1 flex h-14 w-full items-center justify-center gap-1.5 px-4 text-sm"
               >
                 <ChevronRight size={13} />
-                Terminal
+                About me
               </MagneticButton>
 
               <MagneticButton
@@ -563,13 +576,13 @@ export default function HeroSection() {
               </MagneticButton>
             </div>
 
-            {/* Metrics — 2 cols on mobile, 4 on sm+ */}
+            {/* Metrics — clearer labels, 2 cols on mobile, 4 on sm+ */}
             <div className="grid w-full max-w-xs grid-cols-2 gap-4 sm:max-w-lg sm:grid-cols-4 lg:max-w-none">
               {[
-                { val: '3+', label: 'Missions' },
-                { val: '6+', label: 'Technologies' },
+                { val: '3+', label: 'Projects Shipped' },
+                { val: '6+', label: 'Tech Stack' },
                 { val: '4+', label: 'Languages' },
-                { val: 'INF', label: 'Ambition' },
+                { val: '100', label: 'Drive %' },
               ].map((item, i) => (
                 <CountUpMetric key={item.label} value={item.val} label={item.label} delay={i * 150} />
               ))}
@@ -592,8 +605,8 @@ export default function HeroSection() {
 
               {/* HUD Corners */}
               <div className="absolute left-3 top-3 z-20">
-                <p className="font-hud text-[7px] tracking-[0.25em] text-cyan-400/70">AI CORE</p>
-                <p className="font-hud text-[6px] tracking-wider text-purple-400/60">NEURAL ENGINE v3</p>
+                <p className="font-hud text-[7px] tracking-[0.25em] text-cyan-400/70">SKILLS CORE</p>
+                <p className="font-hud text-[6px] tracking-wider text-purple-400/60">TAP NODES TO INSPECT</p>
               </div>
               <div className="absolute right-3 top-3 z-20 text-right">
                 <p className="font-hud text-[7px] tracking-[0.25em] text-cyan-400/70">STATUS: OPTIMAL</p>
@@ -638,7 +651,8 @@ export default function HeroSection() {
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              
+              <p className="font-hud text-[8px] tracking-widest text-purple-300">AI assistant</p>
+              <p className="font-hud text-sm font-bold text-white">Active</p>
             </motion.div>
 
             <motion.div
@@ -646,7 +660,8 @@ export default function HeroSection() {
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
             >
-            
+              <p className="font-hud text-[8px] tracking-widest text-cyan-400">Skill level</p>
+              <p className="font-hud text-sm font-bold text-white">Lvl 40+</p>
             </motion.div>
           </motion.div>
         </div>

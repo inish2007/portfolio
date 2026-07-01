@@ -32,10 +32,10 @@ function SkillNode({ skill, index, inView }) {
 
   return (
     <motion.div
-      className="relative overflow-hidden rounded-xl glass-card p-4 skill-node sm:p-6"
+      className="relative overflow-hidden rounded-xl glass-card p-4 skill-node sm:p-5"
       style={{
-        borderColor: hovered ? `${config.color}60` : 'rgba(0,212,255,0.15)',
-        boxShadow: hovered ? `0 0 30px ${config.glow}` : 'none',
+        borderColor: hovered ? `${config.color}60` : 'rgba(0,212,255,0.10)',
+        boxShadow: hovered ? `0 0 26px ${config.glow}` : 'none',
       }}
       initial={{ opacity: 0, y: 40, scale: 0.9 }}
       animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
@@ -43,11 +43,12 @@ function SkillNode({ skill, index, inView }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Top accent line — quieter at rest, brighter on hover */}
       <div
         className="absolute left-0 right-0 top-0 h-px transition-opacity duration-300"
         style={{
           background: `linear-gradient(90deg, transparent, ${config.color}, transparent)`,
-          opacity: hovered ? 1 : 0.3,
+          opacity: hovered ? 1 : 0.18,
         }}
       />
 
@@ -68,48 +69,49 @@ function SkillNode({ skill, index, inView }) {
         </>
       )}
 
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <p className="mb-2 font-hud text-[9px] font-medium tracking-widest" style={{ color: config.color }}>
-            {config.icon} {skill.category.toUpperCase()}
-          </p>
-          <h3 className="font-hud text-xl font-bold text-white">{skill.name}</h3>
-        </div>
+      {/* Header row — skill name is now the primary element, category badge dropped (already shown by group header above) */}
+      <div className="mb-3.5 flex items-start justify-between gap-3">
+        <h3 className="font-hud text-lg font-bold leading-snug text-white sm:text-[1.15rem]">
+          {skill.name}
+        </h3>
 
         <span
-          className="rounded-full border px-3 py-1 font-hud text-[10px] font-medium"
+          className="flex-shrink-0 rounded-full border px-2.5 py-0.5 font-hud text-[9px] font-medium tracking-wide"
           style={{
             color: STATUS_COLORS[skill.status],
-            borderColor: `${STATUS_COLORS[skill.status]}40`,
-            background: `${STATUS_COLORS[skill.status]}10`,
+            borderColor: `${STATUS_COLORS[skill.status]}35`,
+            background: `${STATUS_COLORS[skill.status]}0c`,
           }}
         >
           {skill.status === 'learning' ? 'LEARNING' : `LVL ${skill.level}`}
         </span>
       </div>
 
-      <div className="mb-4 flex gap-2">
+      {/* Level diamonds — smaller, tighter, secondary weight */}
+      <div className="mb-3 flex gap-1.5">
         {stars.map((filled, value) => (
           <div
             key={value}
-            className="h-4 w-4 rotate-45 transition-all duration-300"
+            className="h-3 w-3 rotate-45 transition-all duration-300"
             style={{
               background: filled ? config.color : 'transparent',
-              border: `1.5px solid ${config.color}60`,
-              boxShadow: filled && hovered ? `0 0 6px ${config.color}` : 'none',
+              border: `1.5px solid ${config.color}45`,
+              boxShadow: filled && hovered ? `0 0 5px ${config.color}` : 'none',
+              opacity: filled ? 0.9 : 0.5,
             }}
           />
         ))}
       </div>
 
+      {/* XP bar — label de-emphasized, bar itself carries the information */}
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <span className="font-hud text-[9px] font-medium tracking-widest text-white/50">XP</span>
-          <span className="font-hud text-[9px] font-medium tracking-widest" style={{ color: config.color }}>
+        <div className="mb-1.5 flex items-center justify-between">
+          <span className="font-hud text-[8px] font-medium tracking-widest text-white/35">XP</span>
+          <span className="font-hud text-[8px] font-medium tracking-widest text-white/45">
             {skill.xp}/100
           </span>
         </div>
-        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
           <motion.div
             className="h-full rounded-full"
             style={{
@@ -145,17 +147,20 @@ export default function SkillsSection() {
           transition={{ duration: 0.7 }}
         >
           <p className="section-label mb-4">SKILL.MATRIX.SYNC</p>
-          <h2 className="section-header gradient-text">Skill Matrix</h2>
-          <p className="mx-auto mt-2 max-w-md font-ui text-white/50">
-          
-          </p>
+          {/* Title scaled down ~18% (clamp ceiling lowered) so it doesn't dominate the viewport */}
+          <h2
+            className="section-header gradient-text"
+            style={{ fontSize: 'clamp(2rem, 4.8vw, 3.2rem)' }}
+          >
+            Skill Matrix
+          </h2>
           <div className="section-sep mt-4" />
         </motion.div>
 
         {categories.map((category, groupIndex) => (
-          <div key={category} className="mb-10 w-full sm:mb-12">
+          <div key={category} className="mb-16 w-full sm:mb-20 last:mb-6">
             <motion.div
-              className="mb-6 flex items-center gap-3 sm:gap-4"
+              className="mb-7 flex items-center gap-3 sm:gap-4"
               initial={{ opacity: 0, x: -30 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
               transition={{ delay: groupIndex * 0.2 }}
@@ -175,7 +180,7 @@ export default function SkillsSection() {
               />
             </motion.div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
               {SKILLS.filter((skill) => skill.category === category).map((skill, index) => (
                 <SkillNode
                   key={skill.name}
@@ -189,7 +194,7 @@ export default function SkillsSection() {
         ))}
 
         <motion.div
-          className="mt-6 flex w-full max-w-4xl flex-col items-start gap-3 rounded-xl glass-card p-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-6"
+          className="mt-2 flex w-full max-w-4xl flex-col items-start gap-3 rounded-xl glass-card p-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-6"
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 1 }}
